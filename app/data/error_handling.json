@@ -1,0 +1,649 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Standardized error handling patterns for workflow automation",
+    "last_updated": "2025-06-18",
+    "total_templates": 18,
+    "usage_note": "Templates can be applied to individual activities or entire workflows"
+  },
+  "error_categories": {
+    "network_errors": {
+      "description": "Network connectivity and communication failures",
+      "templates": {
+        "connection_timeout": {
+          "error_type": "network_timeout",
+          "description": "Network connection or operation timeout",
+          "severity": "medium",
+          "retry_strategy": {
+            "enabled": true,
+            "max_attempts": 3,
+            "retry_interval": "exponential_backoff",
+            "base_delay_seconds": 5,
+            "max_delay_seconds": 60,
+            "backoff_multiplier": 2
+          },
+          "escalation": {
+            "escalate_after_attempts": 3,
+            "escalation_recipients": ["network_team", "system_admin"],
+            "escalation_message": "Persistent network timeout for {activity_name} on {target_system}",
+            "escalation_priority": "medium"
+          },
+          "recovery_actions": [
+            {
+              "action": "verify_network_connectivity",
+              "description": "Check basic network connectivity to target"
+            },
+            {
+              "action": "try_alternative_endpoint",
+              "description": "Attempt connection to backup/alternative endpoint if available"
+            },
+            {
+              "action": "log_network_diagnostics",
+              "description": "Capture network diagnostic information for troubleshooting"
+            }
+          ],
+          "continue_workflow": "after_recovery_attempt",
+          "fallback_behavior": "mark_activity_failed_continue_workflow"
+        },
+        "dns_resolution_failure": {
+          "error_type": "dns_failure",
+          "description": "Unable to resolve hostname to IP address",
+          "severity": "medium",
+          "retry_strategy": {
+            "enabled": true,
+            "max_attempts": 2,
+            "retry_interval": "fixed",
+            "delay_seconds": 10
+          },
+          "recovery_actions": [
+            {
+              "action": "try_ip_address",
+              "description": "Attempt direct IP connection if available"
+            },
+            {
+              "action": "verify_dns_servers",
+              "description": "Check DNS server configuration and availability"
+            }
+          ],
+          "escalation": {
+            "escalate_after_attempts": 2,
+            "escalation_recipients": ["network_team"],
+            "escalation_priority": "medium"
+          }
+        },
+        "network_unreachable": {
+          "error_type": "network_unreachable",
+          "description": "Target network or host is unreachable",
+          "severity": "high",
+          "retry_strategy": {
+            "enabled": true,
+            "max_attempts": 2,
+            "retry_interval": "fixed",
+            "delay_seconds": 30
+          },
+          "escalation": {
+            "escalate_after_attempts": 1,
+            "escalation_recipients": ["network_team", "operations_team"],
+            "escalation_priority": "high",
+            "immediate_escalation": true
+          },
+          "recovery_actions": [
+            {
+              "action": "check_routing_tables",
+              "description": "Verify network routing configuration"
+            },
+            {
+              "action": "ping_intermediate_hops",
+              "description": "Test connectivity to intermediate network devices"
+            }
+          ]
+        }
+      }
+    },
+    "authentication_errors": {
+      "description": "Authentication and authorization failures",
+      "templates": {
+        "invalid_credentials": {
+          "error_type": "auth_failure",
+          "description": "Authentication failed due to invalid credentials",
+          "severity": "high",
+          "retry_strategy": {
+            "enabled": false,
+            "reason": "Retrying with same credentials will likely fail and may trigger account lockout"
+          },
+          "escalation": {
+            "escalate_immediately": true,
+            "escalation_recipients": ["security_team", "system_admin"],
+            "escalation_message": "Authentication failure for {username} on {system}. Possible credential compromise.",
+            "escalation_priority": "high"
+          },
+          "recovery_actions": [
+            {
+              "action": "verify_credential_store",
+              "description": "Check if stored credentials are current and valid"
+            },
+            {
+              "action": "check_account_status",
+              "description": "Verify user account is not locked or disabled"
+            },
+            {
+              "action": "log_security_event",
+              "description": "Record authentication failure for security monitoring"
+            }
+          ],
+          "security_implications": "High - potential security breach or credential compromise",
+          "continue_workflow": "stop_workflow",
+          "notification_required": true
+        },
+        "permission_denied": {
+          "error_type": "authorization_failure",
+          "description": "Insufficient permissions to perform operation",
+          "severity": "medium",
+          "retry_strategy": {
+            "enabled": false,
+            "reason": "Permission issues require manual intervention"
+          },
+          "escalation": {
+            "escalate_after_attempts": 1,
+            "escalation_recipients": ["system_admin", "access_management_team"],
+            "escalation_message": "Permission denied for {operation} on {resource}. Service account may need additional privileges.",
+            "escalation_priority": "medium"
+          },
+          "recovery_actions": [
+            {
+              "action": "verify_required_permissions",
+              "description": "Document the specific permissions required for this operation"
+            },
+            {
+              "action": "check_service_account_membership",
+              "description": "Verify service account group memberships"
+            }
+          ]
+        },
+        "token_expired": {
+          "error_type": "token_expiration",
+          "description": "Authentication token has expired",
+          "severity": "low",
+          "retry_strategy": {
+            "enabled": true,
+            "max_attempts": 2,
+            "retry_interval": "immediate_with_refresh"
+          },
+          "recovery_actions": [
+            {
+              "action": "refresh_authentication_token",
+              "description": "Attempt to refresh or renew authentication token"
+            },
+            {
+              "action": "re_authenticate",
+              "description": "Perform fresh authentication if token refresh fails"
+            }
+          ],
+          "escalation": {
+            "escalate_after_attempts": 2,
+            "escalation_recipients": ["system_admin"],
+            "escalation_priority": "low"
+          }
+        }
+      }
+    },
+    "system_errors": {
+      "description": "System-level errors and resource issues",
+      "templates": {
+        "insufficient_disk_space": {
+          "error_type": "resource_exhaustion",
+          "description": "Insufficient disk space to complete operation",
+          "severity": "high",
+          "retry_strategy": {
+            "enabled": true,
+            "max_attempts": 1,
+            "retry_after_cleanup": true
+          },
+          "recovery_actions": [
+            {
+              "action": "cleanup_temporary_files",
+              "description": "Remove temporary files and logs to free space"
+            },
+            {
+              "action": "compress_old_files",
+              "description": "Compress or archive old files"
+            },
+            {
+              "action": "check_alternative_locations",
+              "description": "Use alternative storage location if available"
+            }
+          ],
+          "escalation": {
+            "escalate_after_recovery_failure": true,
+            "escalation_recipients": ["storage_admin", "operations_team"],
+            "escalation_priority": "high"
+          },
+          "monitoring_action": "alert_on_low_disk_space"
+        },
+        "service_unavailable": {
+          "error_type": "service_failure",
+          "description": "Required service is not available or responding",
+          "severity": "high",
+          "retry_strategy": {
+            "enabled": true,
+            "max_attempts": 5,
+            "retry_interval": "exponential_backoff",
+            "base_delay_seconds": 10,
+            "max_delay_seconds": 300
+          },
+          "recovery_actions": [
+            {
+              "action": "check_service_status",
+              "description": "Verify if service is running and healthy"
+            },
+            {
+              "action": "try_alternative_service",
+              "description": "Use backup or alternative service if configured"
+            },
+            {
+              "action": "restart_service",
+              "description": "Attempt service restart if authorized",
+              "authorization_required": true
+            }
+          ],
+          "escalation": {
+            "escalate_after_attempts": 3,
+            "escalation_recipients": ["service_owner", "operations_team"],
+            "escalation_priority": "high"
+          }
+        },
+        "memory_exhaustion": {
+          "error_type": "resource_exhaustion",
+          "description": "Insufficient memory to complete operation",
+          "severity": "high",
+          "retry_strategy": {
+            "enabled": true,
+            "max_attempts": 2,
+            "retry_interval": "fixed",
+            "delay_seconds": 60,
+            "reduce_memory_usage": true
+          },
+          "recovery_actions": [
+            {
+              "action": "garbage_collection",
+              "description": "Force garbage collection to free memory"
+            },
+            {
+              "action": "process_data_in_chunks",
+              "description": "Break large operations into smaller chunks"
+            },
+            {
+              "action": "use_disk_based_processing",
+              "description": "Use temporary files instead of memory where possible"
+            }
+          ]
+        }
+      }
+    },
+    "data_errors": {
+      "description": "Data validation and integrity issues",
+      "templates": {
+        "data_validation_failure": {
+          "error_type": "data_invalid",
+          "description": "Input data fails validation rules",
+          "severity": "medium",
+          "retry_strategy": {
+            "enabled": false,
+            "reason": "Data validation issues require data correction"
+          },
+          "recovery_actions": [
+            {
+              "action": "log_validation_details",
+              "description": "Record specific validation failures for analysis"
+            },
+            {
+              "action": "quarantine_invalid_data",
+              "description": "Move invalid data to quarantine location"
+            },
+            {
+              "action": "process_valid_data_subset",
+              "description": "Continue processing with valid data if partial processing is acceptable"
+            }
+          ],
+          "escalation": {
+            "escalate_if_critical_data": true,
+            "escalation_recipients": ["data_steward", "business_owner"],
+            "escalation_priority": "medium"
+          },
+          "data_handling": {
+            "preserve_invalid_data": true,
+            "generate_error_report": true,
+            "notify_data_owner": true
+          }
+        },
+        "data_corruption": {
+          "error_type": "data_integrity",
+          "description": "Data appears to be corrupted or inconsistent",
+          "severity": "critical",
+          "retry_strategy": {
+            "enabled": false,
+            "reason": "Corrupted data requires investigation and repair"
+          },
+          "recovery_actions": [
+            {
+              "action": "restore_from_backup",
+              "description": "Restore data from most recent valid backup"
+            },
+            {
+              "action": "run_data_repair_tools",
+              "description": "Attempt automated data repair procedures"
+            },
+            {
+              "action": "isolate_corrupted_data",
+              "description": "Prevent further corruption by isolating affected data"
+            }
+          ],
+          "escalation": {
+            "escalate_immediately": true,
+            "escalation_recipients": [
+              "dba",
+              "data_recovery_team",
+              "management"
+            ],
+            "escalation_priority": "critical"
+          },
+          "workflow_impact": "stop_all_related_workflows"
+        },
+        "schema_mismatch": {
+          "error_type": "data_format",
+          "description": "Data format doesn't match expected schema",
+          "severity": "medium",
+          "retry_strategy": {
+            "enabled": true,
+            "max_attempts": 1,
+            "retry_with_transformation": true
+          },
+          "recovery_actions": [
+            {
+              "action": "apply_data_transformation",
+              "description": "Transform data to match expected schema"
+            },
+            {
+              "action": "use_flexible_parser",
+              "description": "Use more lenient data parsing if available"
+            },
+            {
+              "action": "request_schema_update",
+              "description": "Log request for schema version update"
+            }
+          ]
+        }
+      }
+    },
+    "business_logic_errors": {
+      "description": "Business rule violations and logic errors",
+      "templates": {
+        "business_rule_violation": {
+          "error_type": "business_logic",
+          "description": "Operation violates business rules or constraints",
+          "severity": "medium",
+          "retry_strategy": {
+            "enabled": false,
+            "reason": "Business rule violations require business decision"
+          },
+          "recovery_actions": [
+            {
+              "action": "document_violation_details",
+              "description": "Record detailed information about the business rule violation"
+            },
+            {
+              "action": "route_for_approval",
+              "description": "Send to business owner for exception approval"
+            },
+            {
+              "action": "apply_alternative_logic",
+              "description": "Use alternative business logic if defined"
+            }
+          ],
+          "escalation": {
+            "escalate_to_business_owner": true,
+            "escalation_recipients": ["business_owner", "process_manager"],
+            "escalation_priority": "medium",
+            "require_business_decision": true
+          },
+          "audit_requirements": {
+            "log_violation": true,
+            "maintain_audit_trail": true,
+            "notify_compliance_team": "if_regulatory_impact"
+          }
+        },
+        "workflow_deadlock": {
+          "error_type": "process_deadlock",
+          "description": "Workflow is waiting for condition that cannot be met",
+          "severity": "high",
+          "retry_strategy": {
+            "enabled": false,
+            "reason": "Deadlocks require manual intervention"
+          },
+          "recovery_actions": [
+            {
+              "action": "analyze_wait_conditions",
+              "description": "Identify what the workflow is waiting for"
+            },
+            {
+              "action": "break_deadlock",
+              "description": "Cancel blocking operations or reset wait conditions"
+            },
+            {
+              "action": "restart_workflow",
+              "description": "Restart workflow from safe checkpoint"
+            }
+          ],
+          "escalation": {
+            "escalate_immediately": true,
+            "escalation_recipients": ["workflow_admin", "process_owner"],
+            "escalation_priority": "high"
+          }
+        }
+      }
+    }
+  },
+  "retry_strategies": {
+    "exponential_backoff": {
+      "description": "Exponentially increasing delay between retries",
+      "parameters": {
+        "base_delay_seconds": 5,
+        "max_delay_seconds": 300,
+        "backoff_multiplier": 2,
+        "jitter_enabled": true,
+        "jitter_percentage": 10
+      },
+      "use_cases": ["Network timeouts", "Service unavailable", "Rate limiting"],
+      "implementation_note": "Add random jitter to prevent thundering herd"
+    },
+    "linear_backoff": {
+      "description": "Linearly increasing delay between retries",
+      "parameters": {
+        "initial_delay_seconds": 10,
+        "increment_seconds": 10,
+        "max_delay_seconds": 60
+      },
+      "use_cases": ["System resource contention", "Database locks"]
+    },
+    "fixed_interval": {
+      "description": "Fixed delay between retries",
+      "parameters": {
+        "delay_seconds": 30
+      },
+      "use_cases": ["Periodic checks", "Polling operations"]
+    },
+    "immediate_retry": {
+      "description": "Retry immediately without delay",
+      "parameters": {
+        "max_immediate_attempts": 3
+      },
+      "use_cases": ["Transient network glitches", "Temporary locks"],
+      "caution": "Use sparingly to avoid overwhelming systems"
+    }
+  },
+  "escalation_procedures": {
+    "severity_based_escalation": {
+      "critical": {
+        "escalation_time": "immediate",
+        "notification_methods": ["email", "sms", "phone_call"],
+        "recipients": ["on_call_engineer", "manager", "director"],
+        "follow_up_interval": "15_minutes"
+      },
+      "high": {
+        "escalation_time": "5_minutes",
+        "notification_methods": ["email", "sms"],
+        "recipients": ["team_lead", "on_call_engineer"],
+        "follow_up_interval": "30_minutes"
+      },
+      "medium": {
+        "escalation_time": "15_minutes",
+        "notification_methods": ["email"],
+        "recipients": ["team_members", "team_lead"],
+        "follow_up_interval": "2_hours"
+      },
+      "low": {
+        "escalation_time": "1_hour",
+        "notification_methods": ["email"],
+        "recipients": ["team_members"],
+        "follow_up_interval": "next_business_day"
+      }
+    },
+    "domain_based_escalation": {
+      "security_incidents": {
+        "primary_contact": "security_team",
+        "secondary_contact": "ciso",
+        "notification_requirements": "immediate",
+        "special_procedures": ["isolate_affected_systems", "preserve_evidence"]
+      },
+      "data_issues": {
+        "primary_contact": "data_steward",
+        "secondary_contact": "dba_team",
+        "notification_requirements": "within_30_minutes",
+        "special_procedures": ["backup_affected_data", "assess_data_impact"]
+      },
+      "network_issues": {
+        "primary_contact": "network_team",
+        "secondary_contact": "infrastructure_manager",
+        "notification_requirements": "within_15_minutes"
+      }
+    }
+  },
+  "recovery_patterns": {
+    "rollback_recovery": {
+      "description": "Undo changes and return to previous state",
+      "applicable_scenarios": [
+        "Failed deployments",
+        "Data corruption",
+        "Configuration errors"
+      ],
+      "requirements": {
+        "checkpoint_creation": "before_critical_operations",
+        "transaction_support": "preferred",
+        "backup_verification": "required"
+      },
+      "steps": [
+        "Identify rollback point",
+        "Verify rollback data integrity",
+        "Execute rollback procedure",
+        "Validate system state",
+        "Notify stakeholders"
+      ]
+    },
+    "alternative_path_recovery": {
+      "description": "Use alternative method or route to achieve goal",
+      "applicable_scenarios": [
+        "Service unavailable",
+        "Network path failure",
+        "Resource exhaustion"
+      ],
+      "requirements": {
+        "alternative_configuration": "predefined",
+        "failover_testing": "regular"
+      },
+      "steps": [
+        "Detect primary path failure",
+        "Validate alternative path availability",
+        "Switch to alternative path",
+        "Monitor alternative path performance"
+      ]
+    },
+    "graceful_degradation": {
+      "description": "Continue with reduced functionality",
+      "applicable_scenarios": [
+        "Partial system failure",
+        "Performance degradation",
+        "Resource limitations"
+      ],
+      "steps": [
+        "Identify non-critical functions",
+        "Disable non-essential features",
+        "Continue with core functionality",
+        "Monitor for restoration opportunities"
+      ]
+    },
+    "circuit_breaker_pattern": {
+      "description": "Temporarily stop calling failing service",
+      "applicable_scenarios": [
+        "Cascading failures",
+        "Service overload",
+        "Dependent service issues"
+      ],
+      "parameters": {
+        "failure_threshold": 5,
+        "timeout_duration": "60_seconds",
+        "half_open_test_requests": 3
+      },
+      "states": ["closed", "open", "half_open"]
+    }
+  },
+  "logging_and_monitoring": {
+    "error_logging_requirements": {
+      "log_levels": {
+        "error": "All error conditions that stop workflow execution",
+        "warning": "Recoverable errors and degraded conditions",
+        "info": "Recovery actions and escalations taken",
+        "debug": "Detailed troubleshooting information"
+      },
+      "required_fields": [
+        "timestamp",
+        "error_type",
+        "error_message",
+        "affected_component",
+        "recovery_actions_taken",
+        "escalation_status",
+        "workflow_context"
+      ],
+      "retention_policy": {
+        "error_logs": "2_years",
+        "debug_logs": "30_days",
+        "security_events": "7_years"
+      }
+    },
+    "monitoring_integration": {
+      "metrics_to_track": [
+        "error_rate_by_type",
+        "recovery_success_rate",
+        "escalation_frequency",
+        "time_to_resolution"
+      ],
+      "alerting_thresholds": {
+        "error_rate_spike": "50%_increase_over_baseline",
+        "repeated_failures": "same_error_3_times_in_1_hour",
+        "critical_system_failure": "immediate"
+      }
+    }
+  },
+  "testing_and_validation": {
+    "error_scenario_testing": {
+      "network_failure_simulation": "Test retry and escalation procedures",
+      "data_corruption_simulation": "Verify backup and recovery procedures",
+      "authentication_failure_simulation": "Test security response procedures",
+      "resource_exhaustion_simulation": "Verify graceful degradation"
+    },
+    "recovery_procedure_validation": {
+      "regular_testing_schedule": "monthly",
+      "recovery_time_objectives": "measure_and_improve",
+      "escalation_contact_verification": "quarterly"
+    }
+  }
+}

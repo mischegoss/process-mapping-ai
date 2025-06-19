@@ -1,0 +1,707 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Maps business scenarios to workflow patterns and fragments",
+    "last_updated": "2025-06-18",
+    "total_use_cases": 42,
+    "organization": "Grouped by business domain for easy navigation"
+  },
+  "business_domains": {
+    "human_resources": {
+      "description": "Employee lifecycle and HR process automation",
+      "use_cases": {
+        "employee_onboarding": {
+          "scenario": "New employee joins the company",
+          "description": "Comprehensive process to set up new employee accounts, access, and resources",
+          "triggers": [
+            "new hire form submitted",
+            "start date approaching",
+            "HR approval received"
+          ],
+          "mapped_workflow": "employee_onboarding_automation",
+          "workflow_source": "complete_workflow",
+          "stakeholders": [
+            "HR team",
+            "IT department",
+            "hiring manager",
+            "new employee"
+          ],
+          "expected_outcomes": [
+            "Active Directory account created",
+            "Email account provisioned",
+            "Security groups assigned",
+            "Welcome email sent",
+            "Manager notified"
+          ],
+          "customization_points": {
+            "role_based_access": "Customize security groups by job role",
+            "department_specific": "Add department-specific applications and resources",
+            "location_specific": "Include office location and equipment assignments"
+          },
+          "estimated_duration": "10-15 minutes",
+          "business_value": "Reduces onboarding time from hours to minutes, ensures consistent setup"
+        },
+        "employee_offboarding": {
+          "scenario": "Employee leaves the company",
+          "description": "Secure process to revoke access and preserve data when employee departs",
+          "triggers": [
+            "termination notice",
+            "resignation submitted",
+            "last day approaching"
+          ],
+          "mapped_workflow": "employee_offboarding_process",
+          "workflow_composition": {
+            "fragments": [
+              "isolate_investigate_remediate",
+              "archive_compress_store",
+              "create_configure_notify"
+            ],
+            "customization": "Replace 'investigate' with 'archive user data'"
+          },
+          "stakeholders": [
+            "HR team",
+            "IT security",
+            "manager",
+            "legal department"
+          ],
+          "expected_outcomes": [
+            "AD account disabled",
+            "Email access revoked",
+            "Data archived to manager",
+            "Equipment return scheduled",
+            "Stakeholders notified"
+          ],
+          "security_requirements": "High - must ensure complete access revocation",
+          "compliance_notes": "May require legal hold on data depending on circumstances"
+        },
+        "role_change_access_update": {
+          "scenario": "Employee changes roles or departments",
+          "description": "Update employee access and permissions for new role",
+          "triggers": [
+            "promotion approved",
+            "department transfer",
+            "role change request"
+          ],
+          "mapped_workflow": "role_transition_workflow",
+          "workflow_composition": {
+            "fragments": [
+              "validate_execute_confirm",
+              "create_configure_notify"
+            ],
+            "sequence": "Validate new role requirements → Update permissions → Notify stakeholders"
+          },
+          "stakeholders": ["HR team", "old manager", "new manager", "employee"],
+          "expected_outcomes": [
+            "New permissions assigned",
+            "Old permissions reviewed/removed",
+            "Access validated",
+            "Role change documented"
+          ]
+        },
+        "employee_access_review": {
+          "scenario": "Periodic review of employee access rights",
+          "description": "Regular audit of user permissions for compliance",
+          "triggers": [
+            "quarterly review cycle",
+            "compliance audit",
+            "security assessment"
+          ],
+          "mapped_workflow": "access_review_workflow",
+          "workflow_composition": {
+            "fragments": ["collect_analyze_report", "validate_execute_confirm"],
+            "customization": "Focus on access rights analysis and remediation recommendations"
+          },
+          "frequency": "Quarterly or annually",
+          "compliance_frameworks": ["SOX", "ISO 27001", "PCI DSS"]
+        }
+      }
+    },
+    "it_operations": {
+      "description": "IT infrastructure and systems management",
+      "use_cases": {
+        "server_health_monitoring": {
+          "scenario": "Monitor server uptime and performance",
+          "description": "Automated monitoring of server health with alerting",
+          "triggers": [
+            "scheduled monitoring",
+            "health check failure",
+            "performance threshold exceeded"
+          ],
+          "mapped_workflow": "server_health_monitoring",
+          "workflow_source": "complete_workflow",
+          "stakeholders": [
+            "IT operations",
+            "system administrators",
+            "infrastructure team"
+          ],
+          "expected_outcomes": [
+            "Server status verified",
+            "Issues detected early",
+            "Alerts sent to appropriate teams",
+            "Health metrics logged"
+          ],
+          "monitoring_frequency": "Every 5-15 minutes",
+          "escalation_criteria": "Multiple consecutive failures or critical service impact"
+        },
+        "system_backup_operations": {
+          "scenario": "Regular backup of critical systems and data",
+          "description": "Automated backup with verification and retention management",
+          "triggers": [
+            "scheduled backup time",
+            "manual backup request",
+            "pre-maintenance backup"
+          ],
+          "mapped_workflow": "data_backup_verification",
+          "workflow_source": "complete_workflow",
+          "stakeholders": [
+            "backup administrators",
+            "database administrators",
+            "compliance team"
+          ],
+          "expected_outcomes": [
+            "Backup completed successfully",
+            "Backup integrity verified",
+            "Old backups cleaned up",
+            "Backup status reported"
+          ],
+          "compliance_requirements": "Must meet RTO/RPO requirements for disaster recovery"
+        },
+        "service_restart_procedure": {
+          "scenario": "Restart services with verification",
+          "description": "Safe service restart with pre and post checks",
+          "triggers": [
+            "service failure",
+            "maintenance window",
+            "configuration change"
+          ],
+          "mapped_workflow": "service_restart_workflow",
+          "workflow_composition": {
+            "fragments": ["stop_verify_cleanup", "start_check_alert"],
+            "sequence": "Stop service → Verify shutdown → Start service → Verify startup → Alert if issues"
+          },
+          "stakeholders": [
+            "system administrators",
+            "service owners",
+            "operations team"
+          ],
+          "risk_mitigation": "Includes verification steps to prevent service outages"
+        },
+        "patch_management": {
+          "scenario": "Apply system patches and updates",
+          "description": "Controlled patch deployment with testing and rollback capability",
+          "triggers": [
+            "patch release",
+            "security vulnerability",
+            "maintenance window"
+          ],
+          "mapped_workflow": "patch_deployment_workflow",
+          "workflow_composition": {
+            "fragments": [
+              "backup_verify_cleanup",
+              "provision_test_activate",
+              "validate_execute_confirm"
+            ],
+            "sequence": "Backup system → Apply patch → Test functionality → Activate/Rollback"
+          },
+          "stakeholders": [
+            "patch management team",
+            "system owners",
+            "security team"
+          ],
+          "rollback_procedures": "Automated rollback if testing fails"
+        },
+        "disk_space_management": {
+          "scenario": "Monitor and manage disk space usage",
+          "description": "Automated cleanup and space management",
+          "triggers": [
+            "disk space threshold exceeded",
+            "scheduled cleanup",
+            "manual request"
+          ],
+          "mapped_workflow": "disk_cleanup_workflow",
+          "workflow_composition": {
+            "fragments": [
+              "check_alert_log",
+              "archive_compress_store",
+              "copy_verify_cleanup"
+            ],
+            "customization": "Add disk space cleanup activities"
+          },
+          "automation_level": "High - can safely remove temporary files automatically"
+        }
+      }
+    },
+    "security_operations": {
+      "description": "Security incident response and threat management",
+      "use_cases": {
+        "security_incident_response": {
+          "scenario": "Respond to security threats and breaches",
+          "description": "Comprehensive incident response with containment and investigation",
+          "triggers": [
+            "security alert",
+            "malware detection",
+            "unauthorized access",
+            "data breach"
+          ],
+          "mapped_workflow": "security_incident_response_automation",
+          "workflow_source": "complete_workflow",
+          "stakeholders": [
+            "security operations center",
+            "incident response team",
+            "legal",
+            "executives"
+          ],
+          "expected_outcomes": [
+            "Incident contained",
+            "Evidence preserved",
+            "Stakeholders notified",
+            "Investigation initiated"
+          ],
+          "severity_levels": {
+            "critical": "Immediate response, executive notification",
+            "high": "1-hour response time, management notification",
+            "medium": "4-hour response time, team notification"
+          },
+          "compliance_obligations": "May trigger regulatory reporting requirements"
+        },
+        "malware_containment": {
+          "scenario": "Contain and remediate malware infections",
+          "description": "Isolate infected systems and clean malware",
+          "triggers": [
+            "antivirus detection",
+            "behavioral analysis alert",
+            "user report"
+          ],
+          "mapped_workflow": "malware_response_workflow",
+          "workflow_composition": {
+            "fragments": [
+              "detect_alert_contain",
+              "isolate_investigate_remediate"
+            ],
+            "sequence": "Detect malware → Alert security team → Isolate system → Investigate → Clean"
+          },
+          "stakeholders": [
+            "security team",
+            "endpoint management",
+            "affected users"
+          ],
+          "automation_level": "High for containment, manual verification for remediation"
+        },
+        "unauthorized_access_response": {
+          "scenario": "Respond to unauthorized system access",
+          "description": "Investigate and respond to unauthorized access attempts",
+          "triggers": [
+            "failed login alerts",
+            "privilege escalation",
+            "unusual access patterns"
+          ],
+          "mapped_workflow": "access_violation_response",
+          "workflow_composition": {
+            "fragments": [
+              "collect_analyze_report",
+              "isolate_investigate_remediate"
+            ],
+            "focus": "Evidence collection and access restriction"
+          },
+          "investigation_priority": "High - potential insider threat or external breach"
+        },
+        "vulnerability_remediation": {
+          "scenario": "Address identified security vulnerabilities",
+          "description": "Systematic approach to vulnerability patching and mitigation",
+          "triggers": [
+            "vulnerability scan results",
+            "security advisory",
+            "penetration test findings"
+          ],
+          "mapped_workflow": "vulnerability_management_workflow",
+          "workflow_composition": {
+            "fragments": [
+              "validate_execute_confirm",
+              "backup_verify_cleanup",
+              "start_check_alert"
+            ],
+            "customization": "Add vulnerability assessment and prioritization"
+          },
+          "risk_assessment": "Required to prioritize remediation efforts"
+        }
+      }
+    },
+    "data_management": {
+      "description": "Data processing, reporting, and lifecycle management",
+      "use_cases": {
+        "automated_reporting": {
+          "scenario": "Generate and distribute regular business reports",
+          "description": "End-to-end report generation with data collection and distribution",
+          "triggers": [
+            "scheduled report time",
+            "ad-hoc report request",
+            "compliance deadline"
+          ],
+          "mapped_workflow": "automated_report_generation",
+          "workflow_source": "complete_workflow",
+          "stakeholders": [
+            "business analysts",
+            "executives",
+            "compliance team",
+            "department managers"
+          ],
+          "expected_outcomes": [
+            "Data collected from multiple sources",
+            "Report generated in multiple formats",
+            "Distributed via multiple channels",
+            "Delivery confirmed"
+          ],
+          "customization_points": {
+            "data_sources": "Configurable based on report requirements",
+            "formatting": "Multiple output formats (PDF, Excel, PowerPoint)",
+            "distribution": "Email, SharePoint, Teams, FTP"
+          }
+        },
+        "data_archival": {
+          "scenario": "Archive old data for compliance and storage management",
+          "description": "Move old data to long-term storage with verification",
+          "triggers": [
+            "data retention policy",
+            "storage capacity limits",
+            "compliance requirements"
+          ],
+          "mapped_workflow": "data_archival_workflow",
+          "workflow_composition": {
+            "fragments": ["archive_validate_report", "copy_verify_cleanup"],
+            "sequence": "Identify old data → Archive data → Validate archive → Remove original → Report"
+          },
+          "compliance_considerations": "Must meet regulatory retention requirements",
+          "storage_tiers": "Move through hot → warm → cold → archive storage"
+        },
+        "data_migration": {
+          "scenario": "Migrate data between systems or platforms",
+          "description": "Safe data migration with validation and rollback capability",
+          "triggers": [
+            "system upgrade",
+            "platform migration",
+            "data consolidation"
+          ],
+          "mapped_workflow": "data_migration_workflow",
+          "workflow_composition": {
+            "fragments": [
+              "backup_verify_cleanup",
+              "extract_transform_load",
+              "validate_execute_confirm"
+            ],
+            "sequence": "Backup source → Extract data → Transform format → Load target → Validate"
+          },
+          "risk_mitigation": "Multiple validation checkpoints and rollback procedures"
+        },
+        "data_quality_monitoring": {
+          "scenario": "Monitor and maintain data quality",
+          "description": "Regular data quality checks with remediation",
+          "triggers": [
+            "scheduled quality check",
+            "data anomaly detection",
+            "report accuracy issues"
+          ],
+          "mapped_workflow": "data_quality_workflow",
+          "workflow_composition": {
+            "fragments": ["query_process_export", "collect_analyze_report"],
+            "focus": "Data profiling, quality metrics, and remediation recommendations"
+          },
+          "quality_dimensions": [
+            "completeness",
+            "accuracy",
+            "consistency",
+            "timeliness"
+          ]
+        }
+      }
+    },
+    "compliance_and_audit": {
+      "description": "Regulatory compliance and audit support",
+      "use_cases": {
+        "compliance_reporting": {
+          "scenario": "Generate reports for regulatory compliance",
+          "description": "Automated collection and reporting of compliance data",
+          "triggers": [
+            "regulatory deadline",
+            "audit request",
+            "compliance review"
+          ],
+          "mapped_workflow": "compliance_reporting_workflow",
+          "workflow_composition": {
+            "fragments": ["collect_analyze_report", "validate_execute_confirm"],
+            "customization": "Add compliance-specific data validation and formatting"
+          },
+          "regulatory_frameworks": ["SOX", "GDPR", "HIPAA", "PCI DSS"],
+          "audit_trail": "Complete audit trail required for all compliance activities"
+        },
+        "access_rights_audit": {
+          "scenario": "Audit user access rights for compliance",
+          "description": "Comprehensive review of user permissions and access",
+          "triggers": [
+            "quarterly audit",
+            "compliance review",
+            "security assessment"
+          ],
+          "mapped_workflow": "access_audit_workflow",
+          "workflow_composition": {
+            "fragments": ["collect_analyze_report", "validate_execute_confirm"],
+            "focus": "User access analysis and anomaly detection"
+          },
+          "deliverables": [
+            "Access rights report",
+            "Anomaly findings",
+            "Remediation recommendations"
+          ]
+        },
+        "change_management_audit": {
+          "scenario": "Audit change management processes",
+          "description": "Review changes for compliance and approval verification",
+          "triggers": ["audit period", "change review", "compliance check"],
+          "mapped_workflow": "change_audit_workflow",
+          "workflow_composition": {
+            "fragments": ["collect_analyze_report"],
+            "data_sources": [
+              "change management system",
+              "approval workflows",
+              "implementation logs"
+            ]
+          },
+          "compliance_checks": [
+            "Proper approval",
+            "Documentation complete",
+            "Testing evidence"
+          ]
+        }
+      }
+    },
+    "service_delivery": {
+      "description": "IT service provisioning and management",
+      "use_cases": {
+        "service_provisioning": {
+          "scenario": "Provision new IT services for users",
+          "description": "End-to-end service setup with testing and activation",
+          "triggers": [
+            "service request",
+            "new project setup",
+            "user onboarding"
+          ],
+          "mapped_workflow": "service_provisioning_workflow",
+          "workflow_composition": {
+            "fragments": ["create_configure_notify", "provision_test_activate"],
+            "sequence": "Create service → Configure settings → Test functionality → Activate → Notify users"
+          },
+          "service_types": [
+            "Email accounts",
+            "Database access",
+            "Application licenses",
+            "VPN access"
+          ],
+          "quality_gates": "Testing required before activation"
+        },
+        "service_decommissioning": {
+          "scenario": "Safely decommission IT services",
+          "description": "Controlled service shutdown with data preservation",
+          "triggers": [
+            "project end",
+            "service retirement",
+            "cost optimization"
+          ],
+          "mapped_workflow": "service_decommission_workflow",
+          "workflow_composition": {
+            "fragments": [
+              "backup_verify_cleanup",
+              "stop_verify_cleanup",
+              "archive_validate_report"
+            ],
+            "sequence": "Backup data → Stop service → Verify shutdown → Archive data → Report completion"
+          },
+          "data_preservation": "Critical - must preserve data per retention policies"
+        },
+        "service_capacity_management": {
+          "scenario": "Monitor and manage service capacity",
+          "description": "Automated capacity monitoring with scaling recommendations",
+          "triggers": [
+            "capacity threshold",
+            "performance degradation",
+            "growth planning"
+          ],
+          "mapped_workflow": "capacity_management_workflow",
+          "workflow_composition": {
+            "fragments": ["monitor_escalate_track", "collect_analyze_report"],
+            "focus": "Capacity utilization analysis and scaling recommendations"
+          },
+          "automation_opportunities": "Auto-scaling for cloud services"
+        }
+      }
+    },
+    "business_continuity": {
+      "description": "Disaster recovery and business continuity",
+      "use_cases": {
+        "disaster_recovery_activation": {
+          "scenario": "Activate disaster recovery procedures",
+          "description": "Systematic DR activation with service restoration",
+          "triggers": [
+            "disaster declared",
+            "primary site failure",
+            "planned DR test"
+          ],
+          "mapped_workflow": "disaster_recovery_workflow",
+          "workflow_composition": {
+            "fragments": [
+              "backup_verify_cleanup",
+              "provision_test_activate",
+              "start_check_alert"
+            ],
+            "customization": "DR-specific restore and validation procedures"
+          },
+          "rto_requirements": "Must meet recovery time objectives",
+          "communication_critical": "Multiple stakeholder notification channels required"
+        },
+        "backup_recovery_testing": {
+          "scenario": "Test backup and recovery procedures",
+          "description": "Regular testing of backup recovery capabilities",
+          "triggers": [
+            "scheduled test",
+            "new backup system",
+            "compliance requirement"
+          ],
+          "mapped_workflow": "backup_test_workflow",
+          "workflow_composition": {
+            "fragments": [
+              "backup_verify_cleanup",
+              "provision_test_activate",
+              "collect_analyze_report"
+            ],
+            "focus": "Recovery testing and validation"
+          },
+          "test_frequency": "Monthly for critical systems, quarterly for others"
+        }
+      }
+    }
+  },
+  "cross_functional_use_cases": {
+    "project_lifecycle": {
+      "project_initiation": {
+        "scenario": "Set up resources for new project",
+        "mapped_fragments": [
+          "create_configure_notify",
+          "provision_test_activate"
+        ],
+        "stakeholders": ["project manager", "IT team", "business stakeholders"]
+      },
+      "project_closure": {
+        "scenario": "Clean up project resources",
+        "mapped_fragments": ["archive_validate_report", "stop_verify_cleanup"],
+        "data_retention": "Must follow corporate retention policies"
+      }
+    },
+    "vendor_management": {
+      "vendor_onboarding": {
+        "scenario": "Provide vendor access to systems",
+        "mapped_fragments": [
+          "create_configure_notify",
+          "validate_execute_confirm"
+        ],
+        "security_requirements": "Enhanced security controls for external access"
+      },
+      "vendor_offboarding": {
+        "scenario": "Remove vendor access",
+        "mapped_fragments": [
+          "isolate_investigate_remediate",
+          "archive_validate_report"
+        ],
+        "urgency": "High - external access must be revoked promptly"
+      }
+    }
+  },
+  "use_case_relationships": {
+    "sequential_dependencies": [
+      {
+        "primary": "employee_onboarding",
+        "follows": ["service_provisioning", "access_rights_setup"],
+        "relationship": "Onboarding triggers multiple service provisioning workflows"
+      },
+      {
+        "primary": "security_incident_response",
+        "follows": ["forensic_investigation", "compliance_reporting"],
+        "relationship": "Security incidents may trigger compliance reporting requirements"
+      }
+    ],
+    "alternative_implementations": [
+      {
+        "use_case": "employee_offboarding",
+        "implementations": [
+          {
+            "name": "immediate_termination",
+            "description": "Rapid access revocation for security terminations",
+            "fragments": [
+              "detect_alert_contain",
+              "isolate_investigate_remediate"
+            ]
+          },
+          {
+            "name": "planned_departure",
+            "description": "Gradual transition with knowledge transfer",
+            "fragments": ["archive_validate_report", "create_configure_notify"]
+          }
+        ]
+      }
+    ]
+  },
+  "implementation_guidance": {
+    "workflow_selection": {
+      "complete_workflows": "Use for well-defined, common business processes",
+      "fragment_combinations": "Use for custom or organization-specific processes",
+      "hybrid_approach": "Combine complete workflows with additional fragments for customization"
+    },
+    "customization_strategies": {
+      "parameter_mapping": "Map business context to workflow parameters",
+      "conditional_logic": "Add business rules as workflow conditions",
+      "integration_points": "Connect to organization-specific systems and tools",
+      "approval_workflows": "Insert approval steps for controlled processes"
+    },
+    "success_metrics": {
+      "efficiency": "Time reduction compared to manual processes",
+      "accuracy": "Reduction in human errors and inconsistencies",
+      "compliance": "Improved audit results and regulatory compliance",
+      "satisfaction": "User and stakeholder satisfaction with automated processes"
+    }
+  },
+  "industry_specific_adaptations": {
+    "healthcare": {
+      "additional_considerations": [
+        "HIPAA compliance",
+        "patient data protection",
+        "medical device integration"
+      ],
+      "modified_use_cases": [
+        "patient_data_archival",
+        "medical_device_monitoring",
+        "compliance_reporting_hipaa"
+      ]
+    },
+    "financial_services": {
+      "additional_considerations": [
+        "SOX compliance",
+        "fraud prevention",
+        "regulatory reporting"
+      ],
+      "modified_use_cases": [
+        "transaction_monitoring",
+        "risk_assessment_automation",
+        "regulatory_reporting_finra"
+      ]
+    },
+    "manufacturing": {
+      "additional_considerations": [
+        "production systems",
+        "supply chain integration",
+        "quality management"
+      ],
+      "modified_use_cases": [
+        "production_line_monitoring",
+        "quality_control_automation",
+        "supply_chain_alerts"
+      ]
+    }
+  }
+}

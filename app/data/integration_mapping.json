@@ -1,0 +1,881 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Integration requirements and connection patterns for common enterprise systems",
+    "last_updated": "2025-06-18",
+    "total_integrations": 28,
+    "security_note": "All integrations should follow principle of least privilege"
+  },
+  "identity_management": {
+    "active_directory": {
+      "system_type": "ldap_directory",
+      "description": "Microsoft Active Directory domain services",
+      "required_modules": [
+        {
+          "name": "Active Directory Module",
+          "version": "2.0+",
+          "purpose": "Core AD operations and user management"
+        },
+        {
+          "name": "LDAP Connector",
+          "version": "1.5+",
+          "purpose": "LDAP protocol communication"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "service_account",
+          "recommended": true,
+          "description": "Dedicated service account with specific permissions",
+          "security_level": "high"
+        },
+        {
+          "method": "integrated_windows_auth",
+          "recommended": true,
+          "description": "Use Windows integrated authentication",
+          "requirements": ["domain_joined_system"]
+        },
+        {
+          "method": "ldap_bind",
+          "recommended": false,
+          "description": "Direct LDAP authentication",
+          "security_concerns": ["credential_storage"]
+        }
+      ],
+      "required_permissions": {
+        "read_operations": [
+          "Read user properties",
+          "Read group membership",
+          "Read organizational unit structure"
+        ],
+        "write_operations": [
+          "Create user accounts",
+          "Modify user properties",
+          "Reset passwords",
+          "Add/remove group membership",
+          "Enable/disable accounts"
+        ],
+        "administrative_operations": [
+          "Create organizational units",
+          "Modify group properties",
+          "Delegate permissions"
+        ]
+      },
+      "connection_parameters": {
+        "required": {
+          "domain_controller": "FQDN or IP of domain controller",
+          "domain_name": "Domain name (e.g., company.local)",
+          "port": "389 (LDAP) or 636 (LDAPS)"
+        },
+        "optional": {
+          "search_base": "Default OU for searches",
+          "page_size": "LDAP page size for large queries",
+          "connection_timeout": "Connection timeout in seconds",
+          "ssl_enabled": "Use secure LDAP connection"
+        }
+      },
+      "common_activities": [
+        "AD Create User",
+        "AD Disable User",
+        "AD Reset Password",
+        "AD Add User to Group",
+        "AD Set Property",
+        "AD List Users",
+        "AD Get Property"
+      ],
+      "security_considerations": {
+        "credential_management": "Store service account credentials securely",
+        "least_privilege": "Grant minimal required permissions",
+        "audit_logging": "Enable AD audit logging for automation activities",
+        "certificate_validation": "Validate SSL certificates for LDAPS"
+      },
+      "troubleshooting": {
+        "common_issues": [
+          {
+            "issue": "Authentication failure",
+            "causes": [
+              "Expired service account",
+              "Incorrect permissions",
+              "Account locked"
+            ],
+            "resolution": "Verify service account status and permissions"
+          },
+          {
+            "issue": "User not found",
+            "causes": [
+              "Incorrect search base",
+              "User in different OU",
+              "Replication delay"
+            ],
+            "resolution": "Check search scope and domain controller replication"
+          }
+        ],
+        "diagnostic_commands": [
+          "Test LDAP connectivity",
+          "Verify service account permissions",
+          "Check domain controller availability"
+        ]
+      }
+    },
+    "azure_active_directory": {
+      "system_type": "cloud_identity",
+      "description": "Microsoft Azure Active Directory (Entra ID)",
+      "required_modules": [
+        {
+          "name": "Azure AD Module",
+          "version": "3.0+",
+          "purpose": "Azure AD operations via Graph API"
+        },
+        {
+          "name": "Graph API Connector",
+          "version": "2.0+",
+          "purpose": "Microsoft Graph API communication"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "app_registration",
+          "recommended": true,
+          "description": "Azure AD app registration with client credentials",
+          "requirements": ["tenant_id", "client_id", "client_secret"]
+        },
+        {
+          "method": "managed_identity",
+          "recommended": true,
+          "description": "Azure managed identity for Azure-hosted automation",
+          "requirements": ["azure_resource"]
+        }
+      ],
+      "required_permissions": {
+        "api_permissions": [
+          "User.Read.All",
+          "User.ReadWrite.All",
+          "Group.Read.All",
+          "Group.ReadWrite.All",
+          "Directory.Read.All"
+        ],
+        "admin_consent": "Required for most operations"
+      },
+      "connection_parameters": {
+        "required": {
+          "tenant_id": "Azure AD tenant identifier",
+          "client_id": "Application (client) ID",
+          "client_secret": "Application client secret or certificate"
+        },
+        "endpoints": {
+          "graph_api": "https://graph.microsoft.com/v1.0",
+          "login_url": "https://login.microsoftonline.com"
+        }
+      }
+    }
+  },
+  "messaging_and_email": {
+    "exchange_online": {
+      "system_type": "cloud_email",
+      "description": "Microsoft Exchange Online (Office 365)",
+      "required_modules": [
+        {
+          "name": "Exchange Online Module",
+          "version": "2.0+",
+          "purpose": "Exchange Online management"
+        },
+        {
+          "name": "Graph API Connector",
+          "version": "2.0+",
+          "purpose": "Email operations via Graph API"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "app_registration",
+          "recommended": true,
+          "description": "Azure AD app with Mail permissions"
+        },
+        {
+          "method": "service_account",
+          "recommended": false,
+          "description": "Dedicated service account with mailbox",
+          "deprecation_note": "Basic auth being deprecated"
+        }
+      ],
+      "required_permissions": [
+        "Mail.Send",
+        "Mail.ReadWrite",
+        "Calendars.ReadWrite",
+        "Contacts.ReadWrite"
+      ],
+      "common_activities": [
+        "Send Email",
+        "Create Calendar Event",
+        "Read Email",
+        "Create Distribution List"
+      ]
+    },
+    "smtp_server": {
+      "system_type": "email_relay",
+      "description": "Generic SMTP server for email sending",
+      "required_modules": [
+        {
+          "name": "Email Module",
+          "version": "1.0+",
+          "purpose": "SMTP communication"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "smtp_auth",
+          "description": "Username/password authentication"
+        },
+        {
+          "method": "no_auth",
+          "description": "Unauthenticated relay (internal only)"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "smtp_server": "SMTP server hostname or IP",
+          "port": "25, 587, or 465",
+          "from_address": "Sender email address"
+        },
+        "optional": {
+          "username": "SMTP authentication username",
+          "password": "SMTP authentication password",
+          "use_ssl": "Enable SSL/TLS encryption",
+          "timeout": "Connection timeout in seconds"
+        }
+      },
+      "security_considerations": {
+        "encryption": "Use TLS/SSL when possible",
+        "authentication": "Authenticate when required",
+        "relay_restrictions": "Ensure relay is properly restricted"
+      }
+    }
+  },
+  "databases": {
+    "sql_server": {
+      "system_type": "relational_database",
+      "description": "Microsoft SQL Server",
+      "required_modules": [
+        {
+          "name": "SQL Server Module",
+          "version": "2.0+",
+          "purpose": "SQL Server operations"
+        },
+        {
+          "name": "Database Connectivity Module",
+          "version": "1.5+",
+          "purpose": "Database connection management"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "windows_authentication",
+          "recommended": true,
+          "description": "Windows integrated authentication"
+        },
+        {
+          "method": "sql_authentication",
+          "recommended": false,
+          "description": "SQL Server username/password",
+          "security_concerns": ["credential_storage"]
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "server_name": "SQL Server instance name",
+          "database_name": "Target database name"
+        },
+        "optional": {
+          "port": "SQL Server port (default 1433)",
+          "connection_timeout": "Connection timeout in seconds",
+          "command_timeout": "Command execution timeout",
+          "encrypt_connection": "Enable connection encryption"
+        }
+      },
+      "required_permissions": {
+        "read_operations": ["db_datareader"],
+        "write_operations": ["db_datawriter"],
+        "backup_operations": ["db_backupoperator"],
+        "administrative_operations": ["db_owner", "sysadmin"]
+      },
+      "common_activities": [
+        "Database Query",
+        "Database Backup",
+        "Execute Stored Procedure",
+        "Check Database Health"
+      ],
+      "security_considerations": {
+        "connection_encryption": "Enable SSL/TLS encryption",
+        "least_privilege": "Grant minimal required database permissions",
+        "credential_security": "Use Windows authentication when possible"
+      }
+    },
+    "oracle": {
+      "system_type": "relational_database",
+      "description": "Oracle Database",
+      "required_modules": [
+        {
+          "name": "Oracle Module",
+          "version": "2.0+",
+          "purpose": "Oracle database operations"
+        },
+        {
+          "name": "Oracle Client Libraries",
+          "version": "19c+",
+          "purpose": "Oracle database connectivity"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "tns_name": "TNS service name or connection string",
+          "username": "Database username",
+          "password": "Database password"
+        },
+        "optional": {
+          "port": "Oracle listener port (default 1521)",
+          "sid": "Oracle system identifier",
+          "service_name": "Oracle service name"
+        }
+      }
+    },
+    "mysql": {
+      "system_type": "relational_database",
+      "description": "MySQL Database",
+      "required_modules": [
+        {
+          "name": "MySQL Module",
+          "version": "1.5+",
+          "purpose": "MySQL database operations"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "host": "MySQL server hostname",
+          "database": "Database name",
+          "username": "MySQL username",
+          "password": "MySQL password"
+        },
+        "optional": {
+          "port": "MySQL port (default 3306)",
+          "charset": "Character set",
+          "ssl_mode": "SSL connection mode"
+        }
+      }
+    }
+  },
+  "cloud_platforms": {
+    "aws": {
+      "system_type": "cloud_platform",
+      "description": "Amazon Web Services",
+      "required_modules": [
+        {
+          "name": "AWS Module",
+          "version": "3.0+",
+          "purpose": "AWS service operations"
+        },
+        {
+          "name": "AWS SDK",
+          "version": "latest",
+          "purpose": "AWS API communication"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "iam_role",
+          "recommended": true,
+          "description": "AWS IAM role for EC2 instances"
+        },
+        {
+          "method": "access_keys",
+          "recommended": false,
+          "description": "AWS access key and secret key",
+          "security_concerns": ["key_rotation", "secure_storage"]
+        },
+        {
+          "method": "sts_assume_role",
+          "recommended": true,
+          "description": "Assume role with temporary credentials"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "region": "AWS region (e.g., us-east-1)",
+          "credentials": "Authentication method configuration"
+        },
+        "optional": {
+          "endpoint_url": "Custom endpoint URL",
+          "timeout": "Request timeout settings"
+        }
+      },
+      "common_services": {
+        "ec2": {
+          "activities": [
+            "List Instances",
+            "Start Instance",
+            "Stop Instance",
+            "Create Image"
+          ],
+          "permissions": [
+            "ec2:DescribeInstances",
+            "ec2:StartInstances",
+            "ec2:StopInstances"
+          ]
+        },
+        "s3": {
+          "activities": [
+            "Upload File",
+            "Download File",
+            "List Objects",
+            "Delete Object"
+          ],
+          "permissions": ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+        },
+        "lambda": {
+          "activities": [
+            "Invoke Function",
+            "Create Function",
+            "Update Function"
+          ],
+          "permissions": ["lambda:InvokeFunction", "lambda:CreateFunction"]
+        }
+      }
+    },
+    "azure": {
+      "system_type": "cloud_platform",
+      "description": "Microsoft Azure",
+      "required_modules": [
+        {
+          "name": "Azure Module",
+          "version": "3.0+",
+          "purpose": "Azure service operations"
+        },
+        {
+          "name": "Azure SDK",
+          "version": "latest",
+          "purpose": "Azure REST API communication"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "managed_identity",
+          "recommended": true,
+          "description": "Azure managed identity"
+        },
+        {
+          "method": "service_principal",
+          "recommended": true,
+          "description": "Azure AD service principal"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "subscription_id": "Azure subscription ID",
+          "tenant_id": "Azure AD tenant ID"
+        }
+      }
+    }
+  },
+  "itsm_and_ticketing": {
+    "servicenow": {
+      "system_type": "itsm_platform",
+      "description": "ServiceNow IT Service Management",
+      "required_modules": [
+        {
+          "name": "ServiceNow Module",
+          "version": "2.0+",
+          "purpose": "ServiceNow API operations"
+        },
+        {
+          "name": "REST API Connector",
+          "version": "1.5+",
+          "purpose": "REST API communication"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "basic_auth",
+          "description": "Username and password authentication"
+        },
+        {
+          "method": "oauth2",
+          "recommended": true,
+          "description": "OAuth 2.0 authentication"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "instance_url": "ServiceNow instance URL",
+          "username": "ServiceNow username",
+          "password": "ServiceNow password"
+        },
+        "optional": {
+          "api_version": "API version (default: latest)",
+          "timeout": "Request timeout in seconds"
+        }
+      },
+      "common_activities": [
+        "Create Incident",
+        "Update Incident",
+        "Create Change Request",
+        "Query Records",
+        "Attach File"
+      ],
+      "required_permissions": [
+        "incident_read",
+        "incident_write",
+        "change_read",
+        "change_write"
+      ]
+    },
+    "jira": {
+      "system_type": "issue_tracking",
+      "description": "Atlassian Jira",
+      "required_modules": [
+        {
+          "name": "Jira Module",
+          "version": "2.0+",
+          "purpose": "Jira API operations"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "api_token",
+          "recommended": true,
+          "description": "Jira API token authentication"
+        },
+        {
+          "method": "basic_auth",
+          "recommended": false,
+          "description": "Username and password",
+          "deprecation_note": "Being deprecated by Atlassian"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "server_url": "Jira server URL",
+          "username": "Jira username",
+          "api_token": "Jira API token"
+        }
+      },
+      "common_activities": [
+        "Create Issue",
+        "Update Issue",
+        "Add Comment",
+        "Search Issues",
+        "Create Project"
+      ]
+    }
+  },
+  "collaboration_platforms": {
+    "microsoft_teams": {
+      "system_type": "collaboration",
+      "description": "Microsoft Teams",
+      "required_modules": [
+        {
+          "name": "Teams Module",
+          "version": "2.0+",
+          "purpose": "Teams operations"
+        },
+        {
+          "name": "Graph API Connector",
+          "version": "2.0+",
+          "purpose": "Microsoft Graph API"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "app_registration",
+          "recommended": true,
+          "description": "Azure AD app registration"
+        }
+      ],
+      "required_permissions": [
+        "Chat.ReadWrite",
+        "Channel.ReadWriteAll",
+        "TeamMember.ReadWriteAll"
+      ],
+      "common_activities": [
+        "Post Message to Channel",
+        "Send Chat Message",
+        "Create Team",
+        "Add Team Member"
+      ]
+    },
+    "slack": {
+      "system_type": "collaboration",
+      "description": "Slack messaging platform",
+      "required_modules": [
+        {
+          "name": "Slack Module",
+          "version": "2.0+",
+          "purpose": "Slack API operations"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "bot_token",
+          "recommended": true,
+          "description": "Slack bot token"
+        },
+        {
+          "method": "oauth2",
+          "description": "OAuth 2.0 for user authentication"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "bot_token": "Slack bot token",
+          "workspace": "Slack workspace"
+        }
+      },
+      "common_activities": [
+        "Post Message",
+        "Upload File",
+        "Create Channel",
+        "Invite User to Channel"
+      ]
+    }
+  },
+  "monitoring_and_observability": {
+    "nagios": {
+      "system_type": "monitoring",
+      "description": "Nagios monitoring system",
+      "required_modules": [
+        {
+          "name": "Nagios Module",
+          "version": "1.5+",
+          "purpose": "Nagios operations"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "http_basic",
+          "description": "HTTP basic authentication"
+        }
+      ],
+      "common_activities": [
+        "Check Service Status",
+        "Acknowledge Alert",
+        "Schedule Downtime",
+        "Submit Check Result"
+      ]
+    },
+    "splunk": {
+      "system_type": "log_management",
+      "description": "Splunk log analysis platform",
+      "required_modules": [
+        {
+          "name": "Splunk Module",
+          "version": "2.0+",
+          "purpose": "Splunk search and data operations"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "token_auth",
+          "recommended": true,
+          "description": "Splunk authentication token"
+        }
+      ],
+      "common_activities": [
+        "Run Search Query",
+        "Get Search Results",
+        "Create Alert",
+        "Index Data"
+      ]
+    }
+  },
+  "file_systems_and_storage": {
+    "windows_file_share": {
+      "system_type": "file_storage",
+      "description": "Windows file share (SMB/CIFS)",
+      "required_modules": [
+        {
+          "name": "File Management Module",
+          "version": "1.0+",
+          "purpose": "File operations"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "windows_auth",
+          "recommended": true,
+          "description": "Windows integrated authentication"
+        },
+        {
+          "method": "credential_auth",
+          "description": "Username and password"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "share_path": "UNC path to file share",
+          "credentials": "Authentication credentials"
+        }
+      },
+      "common_activities": [
+        "Copy File",
+        "Move File",
+        "Delete File",
+        "Create Directory",
+        "Check File Exists"
+      ]
+    },
+    "ftp_server": {
+      "system_type": "file_transfer",
+      "description": "FTP/SFTP server",
+      "required_modules": [
+        {
+          "name": "FTP Module",
+          "version": "1.5+",
+          "purpose": "FTP/SFTP operations"
+        }
+      ],
+      "authentication_methods": [
+        {
+          "method": "username_password",
+          "description": "FTP username and password"
+        },
+        {
+          "method": "ssh_key",
+          "recommended": true,
+          "description": "SSH key authentication (SFTP only)"
+        }
+      ],
+      "connection_parameters": {
+        "required": {
+          "host": "FTP server hostname",
+          "username": "FTP username",
+          "password_or_key": "Password or SSH key"
+        },
+        "optional": {
+          "port": "FTP port (21) or SFTP port (22)",
+          "passive_mode": "Use passive mode for FTP",
+          "encryption": "Enable FTPS encryption"
+        }
+      }
+    }
+  },
+  "security_tools": {
+    "antivirus_systems": {
+      "system_type": "security",
+      "description": "Enterprise antivirus management",
+      "required_modules": [
+        {
+          "name": "Antivirus Module",
+          "version": "1.0+",
+          "purpose": "Antivirus operations"
+        }
+      ],
+      "common_activities": [
+        "Run Security Scan",
+        "Update Definitions",
+        "Quarantine File",
+        "Check Protection Status"
+      ]
+    },
+    "siem_systems": {
+      "system_type": "security_monitoring",
+      "description": "Security Information and Event Management",
+      "required_modules": [
+        {
+          "name": "SIEM Module",
+          "version": "2.0+",
+          "purpose": "SIEM integration"
+        }
+      ],
+      "common_activities": [
+        "Submit Security Event",
+        "Query Security Events",
+        "Create Security Case",
+        "Update Investigation"
+      ]
+    }
+  },
+  "integration_best_practices": {
+    "security": {
+      "credential_management": {
+        "encrypt_stored_credentials": true,
+        "use_credential_vaults": "recommended",
+        "rotate_credentials_regularly": true,
+        "principle_of_least_privilege": "always"
+      },
+      "network_security": {
+        "use_encrypted_connections": "when_available",
+        "validate_certificates": true,
+        "restrict_network_access": "firewall_rules",
+        "monitor_connection_attempts": true
+      }
+    },
+    "reliability": {
+      "connection_management": {
+        "implement_connection_pooling": true,
+        "set_appropriate_timeouts": true,
+        "handle_connection_failures": "gracefully",
+        "implement_retry_logic": "with_backoff"
+      },
+      "error_handling": {
+        "log_integration_errors": true,
+        "implement_circuit_breakers": "for_critical_systems",
+        "provide_fallback_mechanisms": "when_possible"
+      }
+    },
+    "monitoring": {
+      "performance_monitoring": {
+        "track_response_times": true,
+        "monitor_error_rates": true,
+        "alert_on_anomalies": true,
+        "capacity_planning": "regular_review"
+      },
+      "integration_health": {
+        "periodic_connectivity_tests": true,
+        "credential_expiration_monitoring": true,
+        "dependency_mapping": "maintain_current"
+      }
+    }
+  },
+  "troubleshooting_guide": {
+    "common_integration_issues": [
+      {
+        "issue": "Authentication failures",
+        "causes": [
+          "Expired credentials",
+          "Insufficient permissions",
+          "Account lockout"
+        ],
+        "resolution_steps": [
+          "Verify credential validity",
+          "Check account status",
+          "Review permission assignments",
+          "Test manual connection"
+        ]
+      },
+      {
+        "issue": "Connection timeouts",
+        "causes": ["Network latency", "Firewall blocking", "Service overload"],
+        "resolution_steps": [
+          "Test network connectivity",
+          "Review firewall rules",
+          "Check service status",
+          "Adjust timeout settings"
+        ]
+      },
+      {
+        "issue": "API rate limiting",
+        "causes": ["Too many requests", "Insufficient API quota"],
+        "resolution_steps": [
+          "Implement request throttling",
+          "Review API usage patterns",
+          "Contact vendor for quota increase",
+          "Use batching where possible"
+        ]
+      }
+    ],
+    "diagnostic_procedures": {
+      "connectivity_test": "Test basic network connectivity to target system",
+      "authentication_test": "Verify credentials work manually",
+      "permission_test": "Test specific operations the automation needs",
+      "performance_test": "Measure response times under normal load"
+    }
+  }
+}

@@ -1,0 +1,619 @@
+{
+  "workflow_metadata": {
+    "id": "security_incident_response",
+    "name": "Security Incident Response Automation",
+    "description": "Comprehensive automated response to security incidents with evidence collection, containment, and stakeholder notification",
+    "complexity": "complex",
+    "category": "security",
+    "estimated_duration": "10-30 minutes (depending on incident severity)",
+    "business_value": "Rapid incident response, consistent security procedures, automated evidence preservation, compliance reporting",
+    "use_cases": [
+      "Malware detection response",
+      "Intrusion detection alerts",
+      "Data breach incidents",
+      "Policy violation responses",
+      "Suspicious activity investigations"
+    ],
+    "tags": [
+      "security",
+      "incident_response",
+      "compliance",
+      "forensics",
+      "parallel_processing",
+      "escalation"
+    ],
+    "resolve_reference": "https://docs.resolve.io/express/Repository/Workflows%20and%20Templates/managing-your-templates/",
+    "demo_scenario": "Enterprise-grade security automation showing sophisticated capabilities",
+    "demo_duration": "6-8 minutes"
+  },
+  "workflow_definition": {
+    "input_parameters": {
+      "incident_details": {
+        "incident_id": {
+          "type": "string",
+          "required": true,
+          "description": "Unique incident identifier",
+          "example": "SEC-2025-001234"
+        },
+        "incident_type": {
+          "type": "string",
+          "required": true,
+          "options": [
+            "malware",
+            "intrusion",
+            "data_breach",
+            "policy_violation",
+            "suspicious_activity"
+          ],
+          "description": "Type of security incident"
+        },
+        "severity": {
+          "type": "string",
+          "required": true,
+          "options": ["low", "medium", "high", "critical"],
+          "description": "Incident severity level"
+        },
+        "affected_systems": {
+          "type": "array",
+          "required": true,
+          "description": "List of affected systems/hosts",
+          "example": ["workstation-01", "server-db-prod", "192.168.1.45"]
+        },
+        "detection_source": {
+          "type": "string",
+          "required": true,
+          "description": "System that detected the incident",
+          "example": "EDR_Agent"
+        },
+        "initial_evidence": {
+          "type": "string",
+          "required": false,
+          "description": "Initial evidence or alert details"
+        }
+      },
+      "response_configuration": {
+        "auto_containment": {
+          "type": "boolean",
+          "required": false,
+          "default": false,
+          "description": "Whether to automatically isolate affected systems"
+        },
+        "evidence_collection": {
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "description": "Whether to collect forensic evidence"
+        },
+        "escalation_threshold": {
+          "type": "string",
+          "required": false,
+          "default": "high",
+          "options": ["medium", "high", "critical"],
+          "description": "Severity level that triggers escalation"
+        }
+      }
+    },
+    "global_variables": {
+      "incident_start_time": {
+        "type": "datetime",
+        "description": "When incident response started"
+      },
+      "containment_status": {
+        "type": "string",
+        "description": "Status of containment efforts"
+      },
+      "evidence_collected": {
+        "type": "array",
+        "description": "List of collected evidence files"
+      },
+      "stakeholders_notified": {
+        "type": "array",
+        "description": "List of notified parties"
+      },
+      "escalation_required": {
+        "type": "boolean",
+        "description": "Whether incident requires escalation"
+      },
+      "case_number": {
+        "type": "string",
+        "description": "Generated case tracking number"
+      }
+    },
+    "activities": [
+      {
+        "step": 1,
+        "activity_id": "initialize_response",
+        "activity_type": "Set Variables",
+        "activity_name": "Initialize Incident Response",
+        "category": "Utility",
+        "description": "Set up incident response session and generate case number",
+        "settings": {
+          "variables": {
+            "incident_start_time": "%CurrentDateTime%",
+            "case_number": "CASE-%FormatDateTime(CurrentDateTime, 'yyyyMMdd')%-%GenerateRandomNumber(1000,9999)%",
+            "response_session_id": "%GenerateGUID%",
+            "escalation_required": "%EvaluateCondition(incident_details.severity IN ['high','critical'])%"
+          }
+        },
+        "output_variables": {
+          "session_initialized": "true",
+          "case_reference": "%case_number%"
+        }
+      },
+      {
+        "step": 2,
+        "activity_id": "severity_assessment",
+        "activity_type": "If/Else Control",
+        "activity_name": "Assess Incident Severity",
+        "category": "Logic",
+        "description": "Determine response actions based on incident severity",
+        "branches": [
+          {
+            "branch_id": "critical_severity",
+            "condition": {
+              "type": "User Defined",
+              "expression": "%incident_details.severity% == 'critical'"
+            },
+            "description": "Critical incident requiring immediate response",
+            "next_activities": [
+              "immediate_containment",
+              "emergency_notification",
+              "evidence_preservation"
+            ]
+          },
+          {
+            "branch_id": "high_severity",
+            "condition": {
+              "type": "User Defined",
+              "expression": "%incident_details.severity% == 'high'"
+            },
+            "description": "High severity incident requiring rapid response",
+            "next_activities": [
+              "rapid_assessment",
+              "stakeholder_notification",
+              "evidence_collection"
+            ]
+          },
+          {
+            "branch_id": "medium_low_severity",
+            "condition": {
+              "type": "Default"
+            },
+            "description": "Medium/low severity incident - standard response",
+            "next_activities": ["standard_assessment", "routine_notification"]
+          }
+        ]
+      },
+      {
+        "step": 3,
+        "activity_id": "parallel_critical_response",
+        "activity_type": "Parallel Control",
+        "activity_name": "Critical Incident Response",
+        "category": "Logic",
+        "branch": "critical_severity",
+        "description": "Execute multiple critical response actions simultaneously",
+        "branches": [
+          {
+            "branch_id": "immediate_containment_branch",
+            "name": "Immediate Containment",
+            "activities": [
+              "isolate_systems",
+              "disable_accounts",
+              "block_network_traffic"
+            ]
+          },
+          {
+            "branch_id": "evidence_preservation_branch",
+            "name": "Evidence Preservation",
+            "activities": [
+              "snapshot_memory",
+              "collect_logs",
+              "preserve_disk_images"
+            ]
+          },
+          {
+            "branch_id": "emergency_communication_branch",
+            "name": "Emergency Communications",
+            "activities": [
+              "alert_ciso",
+              "notify_legal",
+              "contact_external_authorities"
+            ]
+          }
+        ]
+      },
+      {
+        "step": 4,
+        "activity_id": "isolate_systems",
+        "activity_type": "Network Isolation",
+        "activity_name": "Isolate Affected Systems",
+        "category": "Security",
+        "parent_branch": "immediate_containment_branch",
+        "description": "Isolate affected systems from network to prevent spread",
+        "settings": {
+          "target_systems": "%incident_details.affected_systems%",
+          "isolation_method": "network_acl",
+          "preserve_forensic_access": true,
+          "isolation_type": "quarantine_vlan",
+          "verify_isolation": true
+        },
+        "output_variables": {
+          "systems_isolated": "%isolate_systems.IsolatedSystems%",
+          "isolation_successful": "%isolate_systems.Result%",
+          "isolation_timestamp": "%isolate_systems.CompletionTime%"
+        },
+        "error_handling": {
+          "on_failure": "Continue and document failure",
+          "critical_activity": true
+        }
+      },
+      {
+        "step": 5,
+        "activity_id": "collect_system_information",
+        "activity_type": "Gather System Info",
+        "activity_name": "Collect System Intelligence",
+        "category": "Forensics",
+        "parent_branch": "evidence_preservation_branch",
+        "description": "Collect comprehensive system information for analysis",
+        "settings": {
+          "target_systems": "%incident_details.affected_systems%",
+          "collection_scope": {
+            "running_processes": true,
+            "network_connections": true,
+            "registry_changes": true,
+            "file_system_changes": true,
+            "user_activity": true,
+            "system_events": true
+          },
+          "output_format": "json",
+          "compress_output": true
+        },
+        "output_variables": {
+          "evidence_files": "%collect_system_information.OutputFiles%",
+          "collection_size_mb": "%collect_system_information.DataSizeMB%",
+          "collection_status": "%collect_system_information.Result%"
+        },
+        "timeout_setting": 1800
+      },
+      {
+        "step": 6,
+        "activity_id": "analyze_indicators",
+        "activity_type": "Threat Analysis",
+        "activity_name": "Analyze Threat Indicators",
+        "category": "Security Intelligence",
+        "description": "Analyze collected data for threat indicators and IOCs",
+        "settings": {
+          "evidence_sources": "%collect_system_information.OutputFiles%",
+          "threat_intelligence_feeds": [
+            "internal_ioc_db",
+            "external_threat_feeds"
+          ],
+          "analysis_depth": "comprehensive",
+          "ioc_extraction": true,
+          "behavioral_analysis": true,
+          "timeline_construction": true
+        },
+        "output_variables": {
+          "threat_score": "%analyze_indicators.ThreatScore%",
+          "iocs_found": "%analyze_indicators.IOCs%",
+          "attack_vectors": "%analyze_indicators.AttackVectors%",
+          "recommendation": "%analyze_indicators.Recommendation%"
+        }
+      },
+      {
+        "step": 7,
+        "activity_id": "create_security_ticket",
+        "activity_type": "Create Security Case",
+        "activity_name": "Create Security Investigation Case",
+        "category": "Case Management",
+        "description": "Create formal security case for tracking and investigation",
+        "settings": {
+          "case_title": "Security Incident: %incident_details.incident_type% - %incident_details.incident_id%",
+          "case_description": "Automated security incident response case for %incident_details.incident_type% affecting %incident_details.affected_systems%",
+          "severity": "%incident_details.severity%",
+          "incident_type": "%incident_details.incident_type%",
+          "affected_assets": "%incident_details.affected_systems%",
+          "detection_source": "%incident_details.detection_source%",
+          "initial_evidence": "%incident_details.initial_evidence%",
+          "case_classification": "security_incident",
+          "assigned_team": "Security Operations Center",
+          "custom_fields": {
+            "response_session_id": "%response_session_id%",
+            "auto_containment": "%response_configuration.auto_containment%",
+            "threat_score": "%analyze_indicators.ThreatScore%",
+            "iocs_identified": "%analyze_indicators.IOCs%"
+          }
+        },
+        "output_variables": {
+          "case_id": "%create_security_ticket.CaseID%",
+          "case_url": "%create_security_ticket.CaseURL%"
+        }
+      },
+      {
+        "step": 8,
+        "activity_id": "stakeholder_notification_control",
+        "activity_type": "If/Else Control",
+        "activity_name": "Determine Notification Recipients",
+        "category": "Logic",
+        "description": "Determine who needs to be notified based on severity and threat analysis",
+        "branches": [
+          {
+            "branch_id": "executive_notification",
+            "condition": {
+              "type": "User Defined",
+              "expression": "%incident_details.severity% == 'critical' OR %analyze_indicators.ThreatScore% > 8"
+            },
+            "description": "Critical incident requiring executive notification",
+            "next_activities": [
+              "notify_executives",
+              "notify_legal_team",
+              "notify_pr_team"
+            ]
+          },
+          {
+            "branch_id": "management_notification",
+            "condition": {
+              "type": "User Defined",
+              "expression": "%incident_details.severity% == 'high' OR %analyze_indicators.ThreatScore% > 6"
+            },
+            "description": "High impact incident requiring management notification",
+            "next_activities": ["notify_management", "notify_compliance"]
+          },
+          {
+            "branch_id": "team_notification",
+            "condition": {
+              "type": "Default"
+            },
+            "description": "Standard incident notification",
+            "next_activities": ["notify_security_team", "notify_it_operations"]
+          }
+        ]
+      },
+      {
+        "step": 9,
+        "activity_id": "notify_executives",
+        "activity_type": "Send Executive Alert",
+        "activity_name": "Send Executive Security Alert",
+        "category": "Communication",
+        "branch": "executive_notification",
+        "description": "Send high-priority alert to executive team",
+        "settings": {
+          "recipients": [
+            "ciso@company.com",
+            "cto@company.com",
+            "ceo@company.com"
+          ],
+          "notification_method": ["email", "sms", "teams"],
+          "subject": "🚨 CRITICAL SECURITY INCIDENT: %incident_details.incident_type% - %case_number%",
+          "priority": "Urgent",
+          "message_template": "executive_security_alert",
+          "body": {
+            "template": "CRITICAL SECURITY INCIDENT ALERT\n\nCase: %case_number%\nIncident Type: %incident_details.incident_type%\nSeverity: %incident_details.severity%\nThreat Score: %analyze_indicators.ThreatScore%/10\n\nAffected Systems: %incident_details.affected_systems%\nDetection Time: %incident_start_time%\nContainment Status: %containment_status%\n\nImmediate Actions Taken:\n- Systems isolated: %isolate_systems.IsolatedSystems%\n- Evidence collected: %collect_system_information.DataSizeMB% MB\n- Case created: %case_url%\n\nRecommended Actions:\n%analyze_indicators.Recommendation%\n\nSecurity team is actively responding. Updates will follow every 30 minutes.\n\nSecurity Operations Center",
+            "format": "text"
+          },
+          "delivery_confirmation": true
+        },
+        "output_variables": {
+          "executives_notified": "%notify_executives.Recipients%",
+          "notification_status": "%notify_executives.Result%"
+        }
+      },
+      {
+        "step": 10,
+        "activity_id": "generate_incident_report",
+        "activity_type": "Generate Report",
+        "activity_name": "Generate Incident Summary Report",
+        "category": "Reporting",
+        "description": "Create comprehensive incident response summary report",
+        "settings": {
+          "report_template": "security_incident_summary",
+          "report_format": "pdf",
+          "include_sections": [
+            "executive_summary",
+            "incident_timeline",
+            "technical_details",
+            "containment_actions",
+            "evidence_collected",
+            "threat_analysis",
+            "recommendations",
+            "appendices"
+          ],
+          "data_sources": {
+            "incident_metadata": "%incident_details%",
+            "response_actions": "%containment_status%",
+            "evidence_summary": "%collect_system_information%",
+            "threat_analysis": "%analyze_indicators%",
+            "case_information": "%create_security_ticket%"
+          },
+          "classification": "confidential",
+          "distribution_list": ["security_team", "management", "compliance"]
+        },
+        "output_variables": {
+          "report_file": "%generate_incident_report.ReportFile%",
+          "report_url": "%generate_incident_report.ReportURL%"
+        }
+      },
+      {
+        "step": 11,
+        "activity_id": "compliance_check",
+        "activity_type": "Compliance Validation",
+        "activity_name": "Check Compliance Requirements",
+        "category": "Compliance",
+        "description": "Verify if incident requires regulatory notification",
+        "settings": {
+          "regulations": ["GDPR", "SOX", "HIPAA", "PCI_DSS"],
+          "incident_type": "%incident_details.incident_type%",
+          "affected_data_types": "auto_detect",
+          "breach_threshold_check": true,
+          "notification_deadlines": {
+            "GDPR": 72,
+            "state_breach_laws": 60,
+            "customer_notification": 30
+          }
+        },
+        "output_variables": {
+          "regulatory_notification_required": "%compliance_check.NotificationRequired%",
+          "applicable_regulations": "%compliance_check.Regulations%",
+          "notification_deadlines": "%compliance_check.Deadlines%"
+        }
+      },
+      {
+        "step": 12,
+        "activity_id": "update_threat_intelligence",
+        "activity_type": "Update TI Database",
+        "activity_name": "Update Threat Intelligence",
+        "category": "Security Intelligence",
+        "description": "Update threat intelligence database with new IOCs",
+        "settings": {
+          "iocs_to_add": "%analyze_indicators.IOCs%",
+          "threat_context": {
+            "incident_id": "%case_number%",
+            "attack_vectors": "%analyze_indicators.AttackVectors%",
+            "severity": "%incident_details.severity%",
+            "confidence_level": "high"
+          },
+          "sharing_enabled": true,
+          "threat_feeds_to_update": ["internal_ioc_db", "security_team_feeds"]
+        },
+        "output_variables": {
+          "ti_updated": "%update_threat_intelligence.Result%",
+          "iocs_added": "%update_threat_intelligence.IOCsAdded%"
+        }
+      },
+      {
+        "step": 13,
+        "activity_id": "schedule_follow_up",
+        "activity_type": "Schedule Task",
+        "activity_name": "Schedule Follow-up Activities",
+        "category": "Task Management",
+        "description": "Schedule required follow-up tasks and reviews",
+        "settings": {
+          "tasks": [
+            {
+              "name": "4-hour incident review",
+              "schedule": "+4 hours",
+              "assigned_to": "incident_commander",
+              "description": "Review incident response effectiveness and update status"
+            },
+            {
+              "name": "24-hour lessons learned session",
+              "schedule": "+24 hours",
+              "assigned_to": "security_team",
+              "description": "Conduct lessons learned review and update procedures"
+            },
+            {
+              "name": "compliance reporting deadline check",
+              "schedule": "+24 hours",
+              "assigned_to": "compliance_team",
+              "description": "Verify all regulatory reporting requirements are met"
+            }
+          ],
+          "calendar_integration": true,
+          "reminder_notifications": true
+        },
+        "output_variables": {
+          "tasks_scheduled": "%schedule_follow_up.TasksCreated%"
+        }
+      }
+    ],
+    "workflow_flow": {
+      "start": "initialize_response",
+      "sequence": [
+        "initialize_response → severity_assessment",
+        "severity_assessment (critical) → parallel_critical_response",
+        "parallel_critical_response completes → analyze_indicators",
+        "analyze_indicators → create_security_ticket",
+        "create_security_ticket → stakeholder_notification_control",
+        "stakeholder_notification_control → [notify_executives/notify_management/notify_security_team]",
+        "notifications complete → [generate_incident_report, compliance_check, update_threat_intelligence]",
+        "all reports/checks complete → schedule_follow_up"
+      ]
+    },
+    "error_handling": {
+      "global_timeout": 5400,
+      "critical_failure_tolerance": "continue_with_manual_intervention",
+      "escalation_on_failure": {
+        "escalate_to": "security_manager",
+        "escalation_timeout": 1800
+      },
+      "backup_procedures": {
+        "manual_containment_guide": "available",
+        "emergency_contacts": "maintained_separately"
+      }
+    }
+  },
+  "execution_requirements": {
+    "modules": [
+      {
+        "name": "Security Operations Module",
+        "required": true,
+        "purpose": "Execute security response actions"
+      },
+      {
+        "name": "Network Management Module",
+        "required": true,
+        "purpose": "Network isolation and traffic control"
+      },
+      {
+        "name": "Forensics Module",
+        "required": true,
+        "purpose": "Evidence collection and analysis"
+      },
+      {
+        "name": "Threat Intelligence Module",
+        "required": true,
+        "purpose": "IOC analysis and threat scoring"
+      },
+      {
+        "name": "Communication Module",
+        "required": true,
+        "purpose": "Multi-channel notifications"
+      },
+      {
+        "name": "Compliance Module",
+        "required": false,
+        "purpose": "Regulatory requirement checking"
+      }
+    ],
+    "permissions": [
+      "Network security administrator rights",
+      "System isolation privileges",
+      "Forensic evidence collection access",
+      "Executive notification permissions",
+      "Threat intelligence database write access"
+    ]
+  },
+  "demo_configuration": {
+    "sample_inputs": {
+      "incident_details": {
+        "incident_id": "SEC-2025-demo001",
+        "incident_type": "malware",
+        "severity": "high",
+        "affected_systems": ["ws-finance-01", "file-server-02"],
+        "detection_source": "Endpoint_EDR",
+        "initial_evidence": "Suspicious PowerShell execution detected"
+      },
+      "response_configuration": {
+        "auto_containment": true,
+        "evidence_collection": true,
+        "escalation_threshold": "high"
+      }
+    },
+    "demo_talking_points": [
+      "Shows enterprise-grade security automation capabilities",
+      "Demonstrates complex parallel processing and decision trees",
+      "Includes regulatory compliance checking",
+      "Real-time threat intelligence integration",
+      "Comprehensive evidence collection and preservation",
+      "Multi-level stakeholder notification system",
+      "Automated report generation and follow-up scheduling"
+    ]
+  },
+  "validation_data": {
+    "resolve_workflow_equivalent": {
+      "description": "Represents sophisticated security incident response workflows with parallel processing, complex decision logic, and multi-system integration typical of enterprise security automation",
+      "source_url": "https://docs.resolve.io/express/Repository/Workflows%20and%20Templates/managing-your-templates/",
+      "complexity_justification": "Complex workflow with multiple parallel branches, sophisticated conditional logic, extensive integration requirements, and comprehensive error handling"
+    }
+  }
+}

@@ -1,0 +1,729 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Reusable workflow fragments that can be combined to build larger workflows",
+    "last_updated": "2025-06-18",
+    "total_fragments": 24,
+    "usage_note": "Fragments can be chained together and parameterized for different contexts"
+  },
+  "fragment_categories": {
+    "monitoring_patterns": {
+      "description": "Common monitoring and alerting patterns",
+      "fragments": {
+        "check_alert_log": {
+          "name": "Check-Alert-Log",
+          "description": "Basic monitoring pattern: check status, alert if problem, log result",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Check Status",
+              "generic_type": "status_check",
+              "purpose": "Verify system/service status",
+              "outputs": ["status_result", "response_time", "error_details"]
+            },
+            {
+              "step": 2,
+              "activity": "If/Else Control",
+              "generic_type": "conditional",
+              "purpose": "Branch based on status check result",
+              "condition": "%status_result% != 'Success'",
+              "branches": ["alert_branch", "success_branch"]
+            },
+            {
+              "step": 3,
+              "activity": "Send Alert",
+              "generic_type": "notification",
+              "purpose": "Notify stakeholders of issue",
+              "branch": "alert_branch",
+              "parameters": {
+                "urgency": "derived_from_check_result",
+                "message": "Issue detected: %error_details%"
+              }
+            },
+            {
+              "step": 4,
+              "activity": "Log Event",
+              "generic_type": "logging",
+              "purpose": "Record check result for audit trail",
+              "branch": "both",
+              "parameters": {
+                "log_level": "conditional_on_result",
+                "message": "Status check completed: %status_result%"
+              }
+            }
+          ],
+          "parameterization": {
+            "check_target": "What to monitor (server, service, application)",
+            "alert_recipients": "Who to notify on failure",
+            "log_destination": "Where to record results"
+          },
+          "common_usage": [
+            "Server health monitoring",
+            "Service availability checks",
+            "Application performance monitoring"
+          ],
+          "connects_well_with": ["escalation_pattern", "remediation_pattern"]
+        },
+        "monitor_escalate_track": {
+          "name": "Monitor-Escalate-Track",
+          "description": "Advanced monitoring with escalation and tracking",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Monitor System",
+              "generic_type": "monitoring",
+              "purpose": "Continuously monitor target system"
+            },
+            {
+              "step": 2,
+              "activity": "Evaluate Threshold",
+              "generic_type": "conditional",
+              "purpose": "Check if metrics exceed thresholds"
+            },
+            {
+              "step": 3,
+              "activity": "Create Incident Ticket",
+              "generic_type": "ticket_creation",
+              "purpose": "Track issue formally",
+              "condition": "threshold_exceeded"
+            },
+            {
+              "step": 4,
+              "activity": "Send Escalation",
+              "generic_type": "escalated_notification",
+              "purpose": "Notify higher-level support"
+            }
+          ],
+          "parameterization": {
+            "monitoring_frequency": "How often to check",
+            "escalation_criteria": "When to escalate",
+            "tracking_system": "Where to create tickets"
+          }
+        }
+      }
+    },
+    "data_protection_patterns": {
+      "description": "Backup, verification, and data protection patterns",
+      "fragments": {
+        "backup_verify_cleanup": {
+          "name": "Backup-Verify-Cleanup",
+          "description": "Reliable backup pattern with verification and maintenance",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Create Backup",
+              "generic_type": "backup_operation",
+              "purpose": "Generate backup of target data",
+              "outputs": ["backup_file_path", "backup_size", "backup_status"]
+            },
+            {
+              "step": 2,
+              "activity": "Verify Backup",
+              "generic_type": "verification",
+              "purpose": "Validate backup integrity and completeness",
+              "inputs": ["backup_file_path"],
+              "outputs": ["verification_result", "backup_valid"]
+            },
+            {
+              "step": 3,
+              "activity": "If/Else Control",
+              "generic_type": "conditional",
+              "purpose": "Branch based on verification result",
+              "condition": "%backup_valid% == true"
+            },
+            {
+              "step": 4,
+              "activity": "Cleanup Old Backups",
+              "generic_type": "maintenance",
+              "purpose": "Remove outdated backup files",
+              "branch": "success",
+              "parameters": {
+                "retention_policy": "configurable_days",
+                "preserve_count": "minimum_backups_to_keep"
+              }
+            }
+          ],
+          "parameterization": {
+            "backup_source": "What to backup (database, files, system)",
+            "backup_destination": "Where to store backup",
+            "retention_days": "How long to keep backups",
+            "verification_depth": "Level of verification (quick/full)"
+          },
+          "error_handling": {
+            "backup_failure": "Alert administrators, do not cleanup",
+            "verification_failure": "Alert administrators, preserve backup for investigation",
+            "cleanup_failure": "Log warning, continue workflow"
+          },
+          "common_usage": [
+            "Database backup procedures",
+            "File system backups",
+            "Configuration backups"
+          ]
+        },
+        "archive_validate_report": {
+          "name": "Archive-Validate-Report",
+          "description": "Data archival with validation and reporting",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Archive Data",
+              "generic_type": "archival",
+              "purpose": "Move data to long-term storage"
+            },
+            {
+              "step": 2,
+              "activity": "Validate Archive",
+              "generic_type": "validation",
+              "purpose": "Ensure archive is accessible and complete"
+            },
+            {
+              "step": 3,
+              "activity": "Generate Archive Report",
+              "generic_type": "reporting",
+              "purpose": "Document archival activity for compliance"
+            }
+          ]
+        }
+      }
+    },
+    "provisioning_patterns": {
+      "description": "Resource creation and configuration patterns",
+      "fragments": {
+        "create_configure_notify": {
+          "name": "Create-Configure-Notify",
+          "description": "Standard provisioning pattern for any resource",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Create Resource",
+              "generic_type": "creation",
+              "purpose": "Create the primary resource (user, service, etc.)",
+              "outputs": ["resource_id", "creation_status", "resource_details"]
+            },
+            {
+              "step": 2,
+              "activity": "Configure Properties",
+              "generic_type": "configuration",
+              "purpose": "Set properties and permissions for the resource",
+              "inputs": ["resource_id"],
+              "outputs": ["configuration_status", "applied_settings"]
+            },
+            {
+              "step": 3,
+              "activity": "Send Notification",
+              "generic_type": "notification",
+              "purpose": "Inform stakeholders that resource is ready",
+              "parameters": {
+                "recipients": "derived_from_request",
+                "message_template": "resource_ready",
+                "include_details": "%resource_details%"
+              }
+            }
+          ],
+          "parameterization": {
+            "resource_type": "What to create (user, service, database, etc.)",
+            "configuration_template": "Standard settings to apply",
+            "notification_recipients": "Who to inform upon completion"
+          },
+          "common_usage": [
+            "User account provisioning",
+            "Service deployment",
+            "Database creation",
+            "Virtual machine setup"
+          ]
+        },
+        "provision_test_activate": {
+          "name": "Provision-Test-Activate",
+          "description": "Safe provisioning with testing before activation",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Provision Resource",
+              "generic_type": "provisioning",
+              "purpose": "Create resource in inactive/test state"
+            },
+            {
+              "step": 2,
+              "activity": "Run Tests",
+              "generic_type": "testing",
+              "purpose": "Validate resource functionality"
+            },
+            {
+              "step": 3,
+              "activity": "Activate Resource",
+              "generic_type": "activation",
+              "purpose": "Make resource live/available",
+              "condition": "tests_passed"
+            }
+          ]
+        }
+      }
+    },
+    "investigation_patterns": {
+      "description": "Information gathering and analysis patterns",
+      "fragments": {
+        "collect_analyze_report": {
+          "name": "Collect-Analyze-Report",
+          "description": "Investigation pattern for gathering and analyzing information",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Collect Information",
+              "generic_type": "data_collection",
+              "purpose": "Gather relevant data from multiple sources",
+              "outputs": ["collected_data", "data_sources", "collection_status"]
+            },
+            {
+              "step": 2,
+              "activity": "Analyze Data",
+              "generic_type": "analysis",
+              "purpose": "Process and analyze collected information",
+              "inputs": ["collected_data"],
+              "outputs": ["analysis_results", "findings", "recommendations"]
+            },
+            {
+              "step": 3,
+              "activity": "Generate Report",
+              "generic_type": "reporting",
+              "purpose": "Create formal report of findings",
+              "inputs": ["analysis_results", "findings"],
+              "outputs": ["report_file", "report_summary"]
+            }
+          ],
+          "parameterization": {
+            "data_sources": "Where to collect information from",
+            "analysis_type": "What kind of analysis to perform",
+            "report_format": "How to present findings",
+            "distribution_list": "Who should receive the report"
+          },
+          "common_usage": [
+            "Security incident investigation",
+            "Performance analysis",
+            "Compliance auditing",
+            "Troubleshooting analysis"
+          ]
+        },
+        "gather_correlate_escalate": {
+          "name": "Gather-Correlate-Escalate",
+          "description": "Advanced investigation with correlation and escalation",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Gather Evidence",
+              "generic_type": "evidence_collection",
+              "purpose": "Collect detailed evidence from multiple sources"
+            },
+            {
+              "step": 2,
+              "activity": "Correlate Events",
+              "generic_type": "correlation",
+              "purpose": "Find patterns and connections in evidence"
+            },
+            {
+              "step": 3,
+              "activity": "Escalate Findings",
+              "generic_type": "escalation",
+              "purpose": "Notify appropriate authorities or teams",
+              "condition": "significant_findings"
+            }
+          ]
+        }
+      }
+    },
+    "security_response_patterns": {
+      "description": "Security incident response and containment patterns",
+      "fragments": {
+        "isolate_investigate_remediate": {
+          "name": "Isolate-Investigate-Remediate",
+          "description": "Security incident response pattern",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Isolate System",
+              "generic_type": "containment",
+              "purpose": "Prevent spread of security incident",
+              "outputs": ["isolation_status", "affected_systems"]
+            },
+            {
+              "step": 2,
+              "activity": "Investigate Incident",
+              "generic_type": "forensic_investigation",
+              "purpose": "Determine scope and impact of incident",
+              "outputs": ["investigation_findings", "threat_indicators"]
+            },
+            {
+              "step": 3,
+              "activity": "Remediate Threat",
+              "generic_type": "remediation",
+              "purpose": "Remove threat and restore normal operations",
+              "inputs": ["investigation_findings"]
+            }
+          ],
+          "parameterization": {
+            "isolation_method": "How to isolate (network, system, user)",
+            "investigation_depth": "Level of forensic investigation",
+            "remediation_approach": "How to clean and restore"
+          },
+          "urgency": "high",
+          "common_usage": [
+            "Malware incident response",
+            "Data breach response",
+            "Unauthorized access incidents"
+          ]
+        },
+        "detect_alert_contain": {
+          "name": "Detect-Alert-Contain",
+          "description": "Rapid security response pattern",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Detect Threat",
+              "generic_type": "threat_detection",
+              "purpose": "Identify security threat"
+            },
+            {
+              "step": 2,
+              "activity": "Send Security Alert",
+              "generic_type": "security_notification",
+              "purpose": "Immediately notify security team"
+            },
+            {
+              "step": 3,
+              "activity": "Contain Threat",
+              "generic_type": "containment",
+              "purpose": "Limit impact of security incident"
+            }
+          ]
+        }
+      }
+    },
+    "service_management_patterns": {
+      "description": "Service lifecycle and operational patterns",
+      "fragments": {
+        "start_check_alert": {
+          "name": "Start-Check-Alert",
+          "description": "Service startup with verification",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Start Service",
+              "generic_type": "service_control",
+              "purpose": "Initiate service startup",
+              "outputs": ["startup_result", "service_status"]
+            },
+            {
+              "step": 2,
+              "activity": "Check Service Status",
+              "generic_type": "status_verification",
+              "purpose": "Verify service started successfully",
+              "inputs": ["service_name"],
+              "outputs": ["status_confirmed", "health_check_result"]
+            },
+            {
+              "step": 3,
+              "activity": "Send Alert",
+              "generic_type": "conditional_notification",
+              "purpose": "Alert if service failed to start properly",
+              "condition": "%status_confirmed% != true",
+              "parameters": {
+                "alert_type": "service_failure",
+                "urgency": "high"
+              }
+            }
+          ],
+          "parameterization": {
+            "service_name": "Which service to manage",
+            "health_check_url": "How to verify service health",
+            "failure_recipients": "Who to alert on failure"
+          },
+          "common_usage": [
+            "Application deployment",
+            "Service restart procedures",
+            "System startup automation"
+          ]
+        },
+        "stop_verify_cleanup": {
+          "name": "Stop-Verify-Cleanup",
+          "description": "Safe service shutdown with cleanup",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Stop Service",
+              "generic_type": "service_control",
+              "purpose": "Gracefully shutdown service"
+            },
+            {
+              "step": 2,
+              "activity": "Verify Shutdown",
+              "generic_type": "verification",
+              "purpose": "Confirm service stopped cleanly"
+            },
+            {
+              "step": 3,
+              "activity": "Cleanup Resources",
+              "generic_type": "cleanup",
+              "purpose": "Remove temporary files and resources"
+            }
+          ]
+        }
+      }
+    },
+    "file_operation_patterns": {
+      "description": "File and data manipulation patterns",
+      "fragments": {
+        "copy_verify_cleanup": {
+          "name": "Copy-Verify-Cleanup",
+          "description": "Reliable file copying with verification",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Copy Files",
+              "generic_type": "file_operation",
+              "purpose": "Copy files to destination",
+              "outputs": ["copy_result", "files_copied", "copy_size"]
+            },
+            {
+              "step": 2,
+              "activity": "Verify Copy",
+              "generic_type": "verification",
+              "purpose": "Confirm files copied correctly",
+              "verification_methods": ["checksum", "size_check", "file_count"]
+            },
+            {
+              "step": 3,
+              "activity": "Cleanup Source",
+              "generic_type": "cleanup",
+              "purpose": "Remove source files if move operation",
+              "condition": "operation_type == 'move' AND verification_passed"
+            }
+          ],
+          "parameterization": {
+            "operation_type": "copy or move",
+            "verification_level": "quick or thorough",
+            "cleanup_policy": "when to remove source files"
+          }
+        },
+        "archive_compress_store": {
+          "name": "Archive-Compress-Store",
+          "description": "File archival with compression and storage",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Create Archive",
+              "generic_type": "archival",
+              "purpose": "Package files into archive"
+            },
+            {
+              "step": 2,
+              "activity": "Compress Archive",
+              "generic_type": "compression",
+              "purpose": "Reduce archive size"
+            },
+            {
+              "step": 3,
+              "activity": "Store Archive",
+              "generic_type": "storage",
+              "purpose": "Move archive to long-term storage"
+            }
+          ]
+        }
+      }
+    },
+    "data_processing_patterns": {
+      "description": "Data handling and transformation patterns",
+      "fragments": {
+        "extract_transform_load": {
+          "name": "Extract-Transform-Load",
+          "description": "Classic ETL pattern for data processing",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Extract Data",
+              "generic_type": "data_extraction",
+              "purpose": "Pull data from source systems",
+              "outputs": ["raw_data", "extraction_stats"]
+            },
+            {
+              "step": 2,
+              "activity": "Transform Data",
+              "generic_type": "data_transformation",
+              "purpose": "Clean and format data",
+              "inputs": ["raw_data"],
+              "outputs": ["transformed_data", "transformation_log"]
+            },
+            {
+              "step": 3,
+              "activity": "Load Data",
+              "generic_type": "data_loading",
+              "purpose": "Insert data into target system",
+              "inputs": ["transformed_data"]
+            }
+          ],
+          "parameterization": {
+            "source_systems": "Where to extract data from",
+            "transformation_rules": "How to process data",
+            "target_system": "Where to load processed data"
+          }
+        },
+        "query_process_export": {
+          "name": "Query-Process-Export",
+          "description": "Data retrieval and export pattern",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Execute Query",
+              "generic_type": "data_query",
+              "purpose": "Retrieve specific data set"
+            },
+            {
+              "step": 2,
+              "activity": "Process Results",
+              "generic_type": "data_processing",
+              "purpose": "Format and calculate derived values"
+            },
+            {
+              "step": 3,
+              "activity": "Export Data",
+              "generic_type": "data_export",
+              "purpose": "Output data in requested format"
+            }
+          ]
+        }
+      }
+    },
+    "validation_patterns": {
+      "description": "Input validation and verification patterns",
+      "fragments": {
+        "validate_execute_confirm": {
+          "name": "Validate-Execute-Confirm",
+          "description": "Safe execution pattern with validation",
+          "activities": [
+            {
+              "step": 1,
+              "activity": "Validate Input",
+              "generic_type": "validation",
+              "purpose": "Verify all inputs are valid and safe",
+              "outputs": ["validation_result", "validation_errors"]
+            },
+            {
+              "step": 2,
+              "activity": "Execute Operation",
+              "generic_type": "execution",
+              "purpose": "Perform the requested operation",
+              "condition": "%validation_result% == 'passed'",
+              "outputs": ["execution_result", "operation_status"]
+            },
+            {
+              "step": 3,
+              "activity": "Confirm Success",
+              "generic_type": "confirmation",
+              "purpose": "Verify operation completed successfully",
+              "inputs": ["execution_result"]
+            }
+          ],
+          "parameterization": {
+            "validation_rules": "What to validate",
+            "operation_type": "What operation to execute",
+            "confirmation_method": "How to verify success"
+          },
+          "error_handling": {
+            "validation_failure": "Stop execution, report errors",
+            "execution_failure": "Rollback if possible, alert administrators"
+          }
+        }
+      }
+    }
+  },
+  "fragment_combination_patterns": {
+    "sequential_chaining": {
+      "description": "Fragments that commonly follow each other",
+      "chains": [
+        {
+          "name": "Complete Service Management",
+          "sequence": ["stop_verify_cleanup", "start_check_alert"],
+          "use_case": "Service restart with full verification"
+        },
+        {
+          "name": "Secure Data Migration",
+          "sequence": [
+            "validate_execute_confirm",
+            "copy_verify_cleanup",
+            "archive_compress_store"
+          ],
+          "use_case": "Moving data with security and backup"
+        },
+        {
+          "name": "Incident Response to Resolution",
+          "sequence": [
+            "detect_alert_contain",
+            "isolate_investigate_remediate",
+            "collect_analyze_report"
+          ],
+          "use_case": "Complete security incident handling"
+        }
+      ]
+    },
+    "parallel_execution": {
+      "description": "Fragments that can run simultaneously",
+      "parallel_groups": [
+        {
+          "name": "Multi-source Data Collection",
+          "fragments": ["extract_transform_load", "query_process_export"],
+          "use_case": "Gathering data from multiple sources"
+        },
+        {
+          "name": "Comprehensive Monitoring",
+          "fragments": ["check_alert_log", "monitor_escalate_track"],
+          "use_case": "Multi-level system monitoring"
+        }
+      ]
+    }
+  },
+  "usage_guidelines": {
+    "selection_criteria": {
+      "by_domain": {
+        "operations": [
+          "check_alert_log",
+          "start_check_alert",
+          "backup_verify_cleanup"
+        ],
+        "security": ["isolate_investigate_remediate", "detect_alert_contain"],
+        "data_management": [
+          "extract_transform_load",
+          "query_process_export",
+          "archive_compress_store"
+        ],
+        "provisioning": ["create_configure_notify", "provision_test_activate"]
+      },
+      "by_complexity": {
+        "simple": [
+          "check_alert_log",
+          "copy_verify_cleanup",
+          "start_check_alert"
+        ],
+        "moderate": [
+          "backup_verify_cleanup",
+          "create_configure_notify",
+          "validate_execute_confirm"
+        ],
+        "complex": [
+          "isolate_investigate_remediate",
+          "extract_transform_load",
+          "monitor_escalate_track"
+        ]
+      }
+    },
+    "customization_points": {
+      "activity_substitution": "Replace generic activities with specific implementations",
+      "parameter_binding": "Map fragment parameters to workflow variables",
+      "condition_refinement": "Adjust conditional logic for specific use cases",
+      "error_handling": "Add domain-specific error handling"
+    },
+    "integration_tips": {
+      "variable_passing": "Ensure output variables from one fragment feed into the next",
+      "error_propagation": "Design error handling that works across fragment boundaries",
+      "logging_consistency": "Maintain consistent logging patterns across fragments",
+      "notification_coordination": "Avoid duplicate notifications when chaining fragments"
+    }
+  }
+}

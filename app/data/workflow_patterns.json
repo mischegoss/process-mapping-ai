@@ -1,0 +1,638 @@
+{
+  "workflow_patterns": [
+    {
+      "id": "server_monitoring",
+      "name": "Server Monitoring & Alert",
+      "description": "Ping server status and send appropriate email notifications",
+      "category": "monitoring",
+      "complexity": "simple",
+      "activities": ["Ping", "If/Else Control", "Send Email"],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "Ping",
+          "purpose": "Check server status",
+          "settings": ["IP address", "timeout"]
+        },
+        {
+          "step": 2,
+          "activity": "If/Else Control",
+          "purpose": "Branch based on ping result",
+          "conditions": ["Success", "Failure"]
+        },
+        {
+          "step": 3,
+          "activity": "Send Email",
+          "purpose": "Notify administrators",
+          "settings": ["recipients", "message template"]
+        }
+      ],
+      "use_cases": [
+        "server uptime monitoring",
+        "network health checks",
+        "infrastructure alerts"
+      ],
+      "tags": ["monitoring", "email", "ping", "conditional"],
+      "resolve_template_url": "https://docs.resolve.io/express/Builder/Workflow%20Designer/welcome-to-the-workflow-designer/"
+    },
+    {
+      "id": "ad_user_provisioning",
+      "name": "Active Directory User Creation & Setup",
+      "description": "Create new AD user account with proper permissions and group assignment",
+      "category": "identity_management",
+      "complexity": "moderate",
+      "activities": [
+        "Create Memory Table",
+        "AD User Synchronization",
+        "AD Create Group",
+        "AD Set Property",
+        "Send Email"
+      ],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "Create Memory Table",
+          "purpose": "Define user data structure",
+          "settings": ["columns: Type, Name", "user information"]
+        },
+        {
+          "step": 2,
+          "activity": "AD Create User",
+          "purpose": "Create user account",
+          "settings": [
+            "username",
+            "password",
+            "full name",
+            "organizational unit"
+          ]
+        },
+        {
+          "step": 3,
+          "activity": "AD Set Property",
+          "purpose": "Configure user properties",
+          "settings": ["email address", "department", "custom properties"]
+        },
+        {
+          "step": 4,
+          "activity": "AD Add to Group",
+          "purpose": "Assign group memberships",
+          "settings": ["group names", "permissions"]
+        },
+        {
+          "step": 5,
+          "activity": "Send Email",
+          "purpose": "Notify IT admin of completion",
+          "settings": ["admin recipients", "user details"]
+        }
+      ],
+      "use_cases": [
+        "employee onboarding",
+        "contractor access",
+        "temporary accounts"
+      ],
+      "tags": ["active_directory", "user_management", "provisioning", "email"],
+      "resolve_template_url": "https://docs.resolve.io/actions/Repository/Recipients/ad-user-synchronization/"
+    },
+    {
+      "id": "backup_verify_notify",
+      "name": "Backup Creation & Verification",
+      "description": "Create backup, verify integrity, and send status notification",
+      "category": "backup_management",
+      "complexity": "moderate",
+      "activities": [
+        "Create Backup",
+        "Verify Backup",
+        "If/Else Control",
+        "Send Email",
+        "Log Event"
+      ],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "Create Backup",
+          "purpose": "Generate system/data backup",
+          "settings": ["source location", "destination", "backup type"]
+        },
+        {
+          "step": 2,
+          "activity": "Verify Backup",
+          "purpose": "Check backup integrity",
+          "settings": ["backup location", "verification method"]
+        },
+        {
+          "step": 3,
+          "activity": "If/Else Control",
+          "purpose": "Branch on verification result",
+          "conditions": ["Success", "Failure"]
+        },
+        {
+          "step": 4,
+          "activity": "Send Email",
+          "purpose": "Report backup status",
+          "settings": ["IT team recipients", "status message"]
+        },
+        {
+          "step": 5,
+          "activity": "Log Event",
+          "purpose": "Record backup completion",
+          "settings": ["log location", "event details"]
+        }
+      ],
+      "use_cases": [
+        "daily backups",
+        "database snapshots",
+        "system image creation"
+      ],
+      "tags": ["backup", "verification", "logging", "email"],
+      "resolve_template_url": "https://docs.resolve.io/express/Builder/Workflow%20Designer/building-your-workflow/"
+    },
+    {
+      "id": "file_management_batch",
+      "name": "File Management & Organization",
+      "description": "Copy, move, or organize files with error handling and logging",
+      "category": "file_management",
+      "complexity": "simple",
+      "activities": [
+        "Copy File",
+        "Move File",
+        "Delete File",
+        "If/Else Control",
+        "Log Event"
+      ],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "Copy File",
+          "purpose": "Duplicate files to target location",
+          "settings": ["source path", "destination path", "overwrite options"]
+        },
+        {
+          "step": 2,
+          "activity": "If/Else Control",
+          "purpose": "Check copy operation result",
+          "conditions": ["Success", "Failure"]
+        },
+        {
+          "step": 3,
+          "activity": "Move File",
+          "purpose": "Relocate original files",
+          "settings": ["source location", "archive location"]
+        },
+        {
+          "step": 4,
+          "activity": "Log Event",
+          "purpose": "Record file operations",
+          "settings": ["operation log", "file details"]
+        }
+      ],
+      "use_cases": ["file archiving", "data migration", "cleanup operations"],
+      "tags": ["file_operations", "copy", "move", "logging"],
+      "resolve_template_url": "https://docs.resolve.io/express/Builder/Workflow%20Designer/building-your-workflow/"
+    },
+    {
+      "id": "service_restart_monitor",
+      "name": "Service Restart & Health Check",
+      "description": "Stop service, restart, verify status, and alert if issues",
+      "category": "service_management",
+      "complexity": "moderate",
+      "activities": [
+        "Stop Service",
+        "Start Service",
+        "Check Service Status",
+        "If/Else Control",
+        "Send Alert"
+      ],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "Stop Service",
+          "purpose": "Gracefully stop service",
+          "settings": ["service name", "timeout period"]
+        },
+        {
+          "step": 2,
+          "activity": "Start Service",
+          "purpose": "Restart the service",
+          "settings": ["service name", "startup parameters"]
+        },
+        {
+          "step": 3,
+          "activity": "Check Service Status",
+          "purpose": "Verify service is running",
+          "settings": ["service name", "health check endpoint"]
+        },
+        {
+          "step": 4,
+          "activity": "If/Else Control",
+          "purpose": "Branch on service status",
+          "conditions": ["Running", "Failed"]
+        },
+        {
+          "step": 5,
+          "activity": "Send Alert",
+          "purpose": "Notify if restart failed",
+          "settings": ["alert recipients", "error details"]
+        }
+      ],
+      "use_cases": [
+        "service maintenance",
+        "automated recovery",
+        "scheduled restarts"
+      ],
+      "tags": ["service_management", "restart", "monitoring", "alerts"],
+      "resolve_template_url": "https://docs.resolve.io/express/Builder/Workflow%20Designer/working-with-workflows/"
+    },
+    {
+      "id": "security_incident_response",
+      "name": "Security Incident Response",
+      "description": "Detect security event, gather info, alert team, and log incident",
+      "category": "security",
+      "complexity": "complex",
+      "activities": [
+        "Event Detection",
+        "Gather System Info",
+        "Parallel Control",
+        "Send Alert",
+        "Create Ticket",
+        "Log Incident"
+      ],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "Event Detection",
+          "purpose": "Identify security event",
+          "settings": ["event criteria", "severity threshold"]
+        },
+        {
+          "step": 2,
+          "activity": "Parallel Control",
+          "purpose": "Execute multiple actions simultaneously",
+          "branches": ["information_gathering", "alerting"]
+        },
+        {
+          "step": 3,
+          "activity": "Gather System Info",
+          "purpose": "Collect relevant system data",
+          "settings": ["system logs", "network status", "user activity"]
+        },
+        {
+          "step": 4,
+          "activity": "Send Alert",
+          "purpose": "Immediate notification to security team",
+          "settings": ["security team", "incident details"]
+        },
+        {
+          "step": 5,
+          "activity": "Create Ticket",
+          "purpose": "Track incident in ticketing system",
+          "settings": ["ticket system", "incident classification"]
+        },
+        {
+          "step": 6,
+          "activity": "Log Incident",
+          "purpose": "Record in security log",
+          "settings": ["security log", "incident data"]
+        }
+      ],
+      "use_cases": [
+        "intrusion detection",
+        "malware response",
+        "policy violations"
+      ],
+      "tags": [
+        "security",
+        "incident_response",
+        "parallel_processing",
+        "alerting"
+      ],
+      "resolve_template_url": "https://docs.resolve.io/express/Repository/Workflows%20and%20Templates/managing-your-templates/"
+    },
+    {
+      "id": "database_maintenance",
+      "name": "Database Maintenance & Optimization",
+      "description": "Run database maintenance tasks with status reporting",
+      "category": "database_management",
+      "complexity": "moderate",
+      "activities": [
+        "Database Backup",
+        "Run Maintenance",
+        "Check DB Health",
+        "If/Else Control",
+        "Send Report"
+      ],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "Database Backup",
+          "purpose": "Create safety backup before maintenance",
+          "settings": ["database connection", "backup location"]
+        },
+        {
+          "step": 2,
+          "activity": "Run Maintenance",
+          "purpose": "Execute maintenance scripts",
+          "settings": ["maintenance type", "optimization queries"]
+        },
+        {
+          "step": 3,
+          "activity": "Check DB Health",
+          "purpose": "Verify database performance",
+          "settings": ["health checks", "performance metrics"]
+        },
+        {
+          "step": 4,
+          "activity": "If/Else Control",
+          "purpose": "Branch on health check results",
+          "conditions": ["Healthy", "Issues Found"]
+        },
+        {
+          "step": 5,
+          "activity": "Send Report",
+          "purpose": "Send maintenance summary",
+          "settings": ["DBA team", "maintenance report"]
+        }
+      ],
+      "use_cases": [
+        "scheduled maintenance",
+        "performance optimization",
+        "database cleanup"
+      ],
+      "tags": ["database", "maintenance", "backup", "reporting"],
+      "resolve_template_url": "https://docs.resolve.io/express/Builder/Workflow%20Designer/building-your-workflow/"
+    },
+    {
+      "id": "user_offboarding",
+      "name": "Employee Offboarding Process",
+      "description": "Disable accounts, transfer data, revoke access, and notify stakeholders",
+      "category": "identity_management",
+      "complexity": "complex",
+      "activities": [
+        "AD Disable User",
+        "Archive User Data",
+        "Revoke Permissions",
+        "Parallel Control",
+        "Send Notification"
+      ],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "AD Disable User",
+          "purpose": "Disable Active Directory account",
+          "settings": ["username", "disable reason"]
+        },
+        {
+          "step": 2,
+          "activity": "Parallel Control",
+          "purpose": "Handle multiple offboarding tasks simultaneously",
+          "branches": ["data_management", "access_revocation"]
+        },
+        {
+          "step": 3,
+          "activity": "Archive User Data",
+          "purpose": "Backup and transfer user files",
+          "settings": ["user directory", "archive location", "manager email"]
+        },
+        {
+          "step": 4,
+          "activity": "Revoke Permissions",
+          "purpose": "Remove system access across platforms",
+          "settings": ["application list", "group memberships"]
+        },
+        {
+          "step": 5,
+          "activity": "Send Notification",
+          "purpose": "Inform relevant parties",
+          "settings": ["HR team", "IT team", "manager"]
+        }
+      ],
+      "use_cases": [
+        "employee termination",
+        "role changes",
+        "contractor completion"
+      ],
+      "tags": [
+        "offboarding",
+        "active_directory",
+        "data_archival",
+        "access_revocation"
+      ],
+      "resolve_template_url": "https://docs.resolve.io/actions/Repository/Recipients/ad-user-synchronization/"
+    },
+    {
+      "id": "event_log_monitoring",
+      "name": "Event Log Analysis & Response",
+      "description": "Monitor system logs, detect patterns, and respond to critical events",
+      "category": "monitoring",
+      "complexity": "moderate",
+      "activities": [
+        "Read Event Log",
+        "Filter Events",
+        "If/Else Control",
+        "Send Alert",
+        "Create Ticket"
+      ],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "Read Event Log",
+          "purpose": "Retrieve recent log entries",
+          "settings": ["log source", "time range", "event types"]
+        },
+        {
+          "step": 2,
+          "activity": "Filter Events",
+          "purpose": "Identify critical events",
+          "settings": ["filter criteria", "severity levels"]
+        },
+        {
+          "step": 3,
+          "activity": "If/Else Control",
+          "purpose": "Branch on critical event detection",
+          "conditions": ["Critical Events Found", "No Critical Events"]
+        },
+        {
+          "step": 4,
+          "activity": "Send Alert",
+          "purpose": "Immediate notification for critical events",
+          "settings": ["operations team", "event details"]
+        },
+        {
+          "step": 5,
+          "activity": "Create Ticket",
+          "purpose": "Track event for follow-up",
+          "settings": ["ticketing system", "event classification"]
+        }
+      ],
+      "use_cases": [
+        "system monitoring",
+        "error detection",
+        "compliance logging"
+      ],
+      "tags": ["log_monitoring", "event_filtering", "alerting", "ticketing"],
+      "resolve_template_url": "https://docs.resolve.io/express/Builder/Workflow%20Designer/working-with-workflows/"
+    },
+    {
+      "id": "automation_request_workflow",
+      "name": "Automation Request & Fulfillment",
+      "description": "Handle automation requests from submission to completion",
+      "category": "process_management",
+      "complexity": "complex",
+      "activities": [
+        "Receive Request",
+        "Validate Request",
+        "If/Else Control",
+        "Assign Developer",
+        "Send Notification",
+        "Track Progress"
+      ],
+      "sequence": [
+        {
+          "step": 1,
+          "activity": "Receive Request",
+          "purpose": "Capture automation request details",
+          "settings": ["request form", "requestor info", "process description"]
+        },
+        {
+          "step": 2,
+          "activity": "Validate Request",
+          "purpose": "Check request completeness and feasibility",
+          "settings": ["validation criteria", "approval rules"]
+        },
+        {
+          "step": 3,
+          "activity": "If/Else Control",
+          "purpose": "Branch on validation result",
+          "conditions": ["Approved", "Rejected", "Needs More Info"]
+        },
+        {
+          "step": 4,
+          "activity": "Assign Developer",
+          "purpose": "Route to appropriate automation developer",
+          "settings": ["developer pool", "workload balancing"]
+        },
+        {
+          "step": 5,
+          "activity": "Send Notification",
+          "purpose": "Update requestor and assignee",
+          "settings": ["status updates", "progress notifications"]
+        },
+        {
+          "step": 6,
+          "activity": "Track Progress",
+          "purpose": "Monitor development progress",
+          "settings": ["status tracking", "milestone reporting"]
+        }
+      ],
+      "use_cases": [
+        "automation request management",
+        "development workflow",
+        "stakeholder communication"
+      ],
+      "tags": [
+        "request_management",
+        "workflow_assignment",
+        "progress_tracking",
+        "notifications"
+      ],
+      "resolve_template_url": "https://docs.resolve.io/pro/7.8/Development%20Guides/automation-requests-and-fulfillment/"
+    }
+  ],
+  "pattern_categories": {
+    "monitoring": {
+      "description": "Workflows for system and application monitoring",
+      "common_activities": ["Ping", "Check Status", "Read Logs", "Send Alert"]
+    },
+    "identity_management": {
+      "description": "User and access management workflows",
+      "common_activities": [
+        "AD Create User",
+        "AD Disable User",
+        "Set Permissions",
+        "Send Notification"
+      ]
+    },
+    "backup_management": {
+      "description": "Data backup and recovery workflows",
+      "common_activities": [
+        "Create Backup",
+        "Verify Backup",
+        "Archive Data",
+        "Send Report"
+      ]
+    },
+    "file_management": {
+      "description": "File operations and data organization",
+      "common_activities": [
+        "Copy File",
+        "Move File",
+        "Delete File",
+        "Archive Data"
+      ]
+    },
+    "service_management": {
+      "description": "Service lifecycle and maintenance workflows",
+      "common_activities": [
+        "Start Service",
+        "Stop Service",
+        "Check Status",
+        "Send Alert"
+      ]
+    },
+    "security": {
+      "description": "Security incident response and compliance",
+      "common_activities": [
+        "Event Detection",
+        "Gather Info",
+        "Send Alert",
+        "Log Incident"
+      ]
+    },
+    "database_management": {
+      "description": "Database maintenance and administration",
+      "common_activities": [
+        "Database Backup",
+        "Run Maintenance",
+        "Check Health",
+        "Send Report"
+      ]
+    },
+    "process_management": {
+      "description": "Business process automation and management",
+      "common_activities": [
+        "Receive Request",
+        "Validate",
+        "Assign",
+        "Track Progress"
+      ]
+    }
+  },
+  "common_controls": {
+    "if_else": {
+      "description": "Conditional branching based on activity results",
+      "use_cases": [
+        "Success/failure handling",
+        "Decision points",
+        "Error routing"
+      ]
+    },
+    "parallel": {
+      "description": "Execute multiple activities simultaneously",
+      "use_cases": [
+        "Time-saving operations",
+        "Independent tasks",
+        "Concurrent processing"
+      ]
+    },
+    "while_loop": {
+      "description": "Repeat activities until condition is met",
+      "use_cases": ["Polling operations", "Retry logic", "Batch processing"]
+    }
+  },
+  "metadata": {
+    "extraction_date": "2025-06-18",
+    "source": "Resolve Actions Documentation",
+    "total_patterns": 10,
+    "complexity_levels": ["simple", "moderate", "complex"],
+    "validation_status": "manual_extraction"
+  }
+}

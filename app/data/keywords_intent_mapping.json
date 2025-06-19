@@ -1,0 +1,807 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Maps natural language user inputs to technical workflow activities",
+    "last_updated": "2025-06-18",
+    "total_intents": 85,
+    "confidence_scale": "0.0 to 1.0 (higher = more confident match)"
+  },
+  "intent_categories": {
+    "monitoring": {
+      "description": "System and application monitoring activities",
+      "intents": {
+        "check_server_health": {
+          "keywords": [
+            "check server",
+            "ping server",
+            "test connectivity",
+            "server health",
+            "server status",
+            "monitor server",
+            "verify server",
+            "is server up",
+            "server uptime",
+            "server alive",
+            "network connectivity",
+            "connection test",
+            "reachability test"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Ping",
+            "confidence": 0.95,
+            "required_parameters": ["host", "timeout"],
+            "common_follow_up": ["Send Email", "Log Event"]
+          },
+          "context_clues": [
+            "ip address",
+            "hostname",
+            "network",
+            "connectivity",
+            "response time"
+          ]
+        },
+        "monitor_service": {
+          "keywords": [
+            "check service",
+            "service status",
+            "is service running",
+            "monitor service",
+            "service health",
+            "verify service",
+            "application status",
+            "process running"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Check Service Status",
+            "confidence": 0.9,
+            "required_parameters": ["service_name"],
+            "common_follow_up": ["Restart Service", "Send Alert"]
+          }
+        },
+        "monitor_disk_space": {
+          "keywords": [
+            "check disk space",
+            "disk usage",
+            "storage space",
+            "free space",
+            "disk capacity",
+            "monitor storage",
+            "hard drive space",
+            "file system usage"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Get Disk Space",
+            "confidence": 0.92,
+            "required_parameters": ["drive_path"],
+            "common_follow_up": ["If/Else Control", "Send Alert"]
+          }
+        },
+        "check_logs": {
+          "keywords": [
+            "check logs",
+            "read logs",
+            "monitor logs",
+            "log analysis",
+            "event logs",
+            "system logs",
+            "application logs",
+            "error logs",
+            "audit logs"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Read Event Log",
+            "confidence": 0.88,
+            "required_parameters": ["log_source", "time_range"],
+            "common_follow_up": ["Filter Events", "Send Alert"]
+          }
+        }
+      }
+    },
+    "communication": {
+      "description": "Communication and notification activities",
+      "intents": {
+        "send_email": {
+          "keywords": [
+            "send email",
+            "email notification",
+            "notify by email",
+            "send message",
+            "email alert",
+            "send notification",
+            "inform by email",
+            "email report"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Send Email",
+            "confidence": 0.98,
+            "required_parameters": ["recipients", "subject", "body"],
+            "optional_parameters": ["attachments", "priority", "cc", "bcc"]
+          },
+          "context_clues": ["recipients", "subject", "message", "attach", "@"]
+        },
+        "send_alert": {
+          "keywords": [
+            "send alert",
+            "raise alert",
+            "trigger alert",
+            "emergency notification",
+            "urgent message",
+            "critical alert",
+            "immediate notification"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Send Email",
+            "confidence": 0.85,
+            "required_parameters": ["recipients", "subject"],
+            "parameter_defaults": {
+              "priority": "High",
+              "subject_prefix": "ALERT:"
+            }
+          }
+        },
+        "send_sms": {
+          "keywords": [
+            "send sms",
+            "text message",
+            "send text",
+            "mobile notification",
+            "phone notification",
+            "sms alert"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Send SMS",
+            "confidence": 0.9,
+            "required_parameters": ["phone_number", "message"]
+          }
+        },
+        "teams_message": {
+          "keywords": [
+            "post to teams",
+            "teams message",
+            "teams notification",
+            "teams channel",
+            "microsoft teams",
+            "teams alert",
+            "notify teams"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Post to Teams",
+            "confidence": 0.93,
+            "required_parameters": ["channel", "message"]
+          }
+        }
+      }
+    },
+    "user_management": {
+      "description": "User and identity management activities",
+      "intents": {
+        "create_user": {
+          "keywords": [
+            "create user",
+            "add user",
+            "new user",
+            "user account",
+            "create account",
+            "provision user",
+            "onboard user",
+            "setup user",
+            "add employee"
+          ],
+          "activity_mapping": {
+            "primary_activity": "AD Create User",
+            "confidence": 0.95,
+            "required_parameters": [
+              "username",
+              "password",
+              "first_name",
+              "last_name"
+            ],
+            "common_follow_up": [
+              "AD Set Property",
+              "AD Add to Group",
+              "Send Email"
+            ]
+          },
+          "context_clues": [
+            "username",
+            "password",
+            "employee",
+            "new hire",
+            "onboarding"
+          ]
+        },
+        "disable_user": {
+          "keywords": [
+            "disable user",
+            "deactivate user",
+            "remove user",
+            "delete account",
+            "offboard user",
+            "terminate user",
+            "suspend account",
+            "lock account"
+          ],
+          "activity_mapping": {
+            "primary_activity": "AD Disable User",
+            "confidence": 0.92,
+            "required_parameters": ["username"],
+            "common_follow_up": [
+              "Archive User Data",
+              "Revoke Permissions",
+              "Send Notification"
+            ]
+          },
+          "context_clues": [
+            "terminate",
+            "leaving",
+            "offboard",
+            "disable",
+            "deactivate"
+          ]
+        },
+        "reset_password": {
+          "keywords": [
+            "reset password",
+            "change password",
+            "password reset",
+            "unlock account",
+            "new password",
+            "password recovery",
+            "forgot password"
+          ],
+          "activity_mapping": {
+            "primary_activity": "AD Reset Password",
+            "confidence": 0.9,
+            "required_parameters": ["username", "new_password"],
+            "common_follow_up": ["Send Email", "Force Password Change"]
+          }
+        },
+        "add_to_group": {
+          "keywords": [
+            "add to group",
+            "assign group",
+            "group membership",
+            "add permissions",
+            "join group",
+            "group access",
+            "assign role"
+          ],
+          "activity_mapping": {
+            "primary_activity": "AD Add User to Group",
+            "confidence": 0.88,
+            "required_parameters": ["username", "group_name"]
+          }
+        }
+      }
+    },
+    "file_operations": {
+      "description": "File and directory management activities",
+      "intents": {
+        "copy_files": {
+          "keywords": [
+            "copy file",
+            "copy files",
+            "duplicate file",
+            "backup file",
+            "file copy",
+            "move copy",
+            "replicate file",
+            "clone file"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Copy File",
+            "confidence": 0.95,
+            "required_parameters": ["source_path", "destination_path"],
+            "optional_parameters": ["overwrite", "preserve_attributes"]
+          },
+          "context_clues": ["source", "destination", "from", "to", "backup"]
+        },
+        "move_files": {
+          "keywords": [
+            "move file",
+            "move files",
+            "relocate file",
+            "transfer file",
+            "file move",
+            "cut and paste",
+            "relocate"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Move File",
+            "confidence": 0.93,
+            "required_parameters": ["source_path", "destination_path"]
+          }
+        },
+        "delete_files": {
+          "keywords": [
+            "delete file",
+            "remove file",
+            "delete files",
+            "cleanup files",
+            "purge files",
+            "erase file",
+            "file deletion",
+            "remove old files"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Delete File",
+            "confidence": 0.9,
+            "required_parameters": ["file_path"],
+            "optional_parameters": ["confirm_delete", "force_delete"]
+          },
+          "context_clues": ["remove", "cleanup", "purge", "old", "temporary"]
+        },
+        "create_directory": {
+          "keywords": [
+            "create folder",
+            "create directory",
+            "make folder",
+            "new folder",
+            "mkdir",
+            "create path",
+            "folder creation"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Create Directory",
+            "confidence": 0.92,
+            "required_parameters": ["directory_path"],
+            "optional_parameters": ["permissions", "recursive"]
+          }
+        },
+        "archive_files": {
+          "keywords": [
+            "archive files",
+            "compress files",
+            "zip files",
+            "backup archive",
+            "create archive",
+            "file compression",
+            "pack files"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Create Archive",
+            "confidence": 0.87,
+            "required_parameters": ["source_files", "archive_path"]
+          }
+        }
+      }
+    },
+    "database_operations": {
+      "description": "Database management and operations",
+      "intents": {
+        "backup_database": {
+          "keywords": [
+            "backup database",
+            "database backup",
+            "db backup",
+            "create backup",
+            "dump database",
+            "export database",
+            "save database"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Database Backup",
+            "confidence": 0.95,
+            "required_parameters": ["database_name", "backup_path"],
+            "common_follow_up": ["Verify Backup", "Send Email"]
+          },
+          "context_clues": ["database", "db", "sql", "backup", "dump"]
+        },
+        "run_query": {
+          "keywords": [
+            "run query",
+            "execute query",
+            "database query",
+            "sql query",
+            "select data",
+            "query database",
+            "get data",
+            "retrieve data"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Database Query",
+            "confidence": 0.88,
+            "required_parameters": ["connection", "query"],
+            "optional_parameters": ["timeout", "parameters"]
+          }
+        },
+        "check_database": {
+          "keywords": [
+            "check database",
+            "database health",
+            "db status",
+            "database check",
+            "verify database",
+            "database integrity"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Check Database Health",
+            "confidence": 0.85,
+            "required_parameters": ["database_connection"]
+          }
+        }
+      }
+    },
+    "service_management": {
+      "description": "Service lifecycle management",
+      "intents": {
+        "start_service": {
+          "keywords": [
+            "start service",
+            "launch service",
+            "run service",
+            "enable service",
+            "activate service",
+            "begin service",
+            "initiate service"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Start Service",
+            "confidence": 0.94,
+            "required_parameters": ["service_name"],
+            "common_follow_up": ["Check Service Status", "Send Email"]
+          }
+        },
+        "stop_service": {
+          "keywords": [
+            "stop service",
+            "halt service",
+            "kill service",
+            "terminate service",
+            "shutdown service",
+            "end service",
+            "disable service"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Stop Service",
+            "confidence": 0.92,
+            "required_parameters": ["service_name"],
+            "optional_parameters": ["force_stop", "timeout"]
+          }
+        },
+        "restart_service": {
+          "keywords": [
+            "restart service",
+            "reboot service",
+            "cycle service",
+            "service restart",
+            "reload service",
+            "refresh service"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Restart Service",
+            "confidence": 0.96,
+            "required_parameters": ["service_name"],
+            "common_follow_up": ["Check Service Status", "Send Email"]
+          }
+        }
+      }
+    },
+    "security_operations": {
+      "description": "Security-related activities",
+      "intents": {
+        "isolate_system": {
+          "keywords": [
+            "isolate system",
+            "quarantine system",
+            "block network",
+            "disconnect system",
+            "network isolation",
+            "contain threat",
+            "cut network access"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Network Isolation",
+            "confidence": 0.9,
+            "required_parameters": ["target_system"],
+            "common_follow_up": ["Send Alert", "Log Event"]
+          }
+        },
+        "scan_for_malware": {
+          "keywords": [
+            "scan malware",
+            "virus scan",
+            "security scan",
+            "antivirus scan",
+            "malware check",
+            "threat scan"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Run Security Scan",
+            "confidence": 0.88,
+            "required_parameters": ["target_system", "scan_type"]
+          }
+        },
+        "collect_evidence": {
+          "keywords": [
+            "collect evidence",
+            "gather forensics",
+            "forensic collection",
+            "evidence gathering",
+            "system snapshot",
+            "memory dump",
+            "collect logs"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Collect System Info",
+            "confidence": 0.85,
+            "required_parameters": ["target_system", "collection_type"]
+          }
+        }
+      }
+    },
+    "reporting": {
+      "description": "Report generation and data analysis",
+      "intents": {
+        "generate_report": {
+          "keywords": [
+            "generate report",
+            "create report",
+            "build report",
+            "report generation",
+            "produce report",
+            "compile report",
+            "make report"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Generate Report",
+            "confidence": 0.92,
+            "required_parameters": ["report_template", "data_source"],
+            "common_follow_up": ["Export Report", "Send Email"]
+          }
+        },
+        "export_data": {
+          "keywords": [
+            "export data",
+            "extract data",
+            "data export",
+            "save data",
+            "download data",
+            "output data",
+            "data extraction"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Export Data",
+            "confidence": 0.88,
+            "required_parameters": ["data_source", "export_format"]
+          }
+        },
+        "analyze_data": {
+          "keywords": [
+            "analyze data",
+            "data analysis",
+            "process data",
+            "examine data",
+            "data processing",
+            "calculate metrics",
+            "compute statistics"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Data Analysis",
+            "confidence": 0.8,
+            "required_parameters": ["data_source", "analysis_type"]
+          }
+        }
+      }
+    },
+    "workflow_control": {
+      "description": "Workflow logic and control structures",
+      "intents": {
+        "conditional_logic": {
+          "keywords": [
+            "if",
+            "when",
+            "conditional",
+            "check if",
+            "depending on",
+            "based on",
+            "if condition",
+            "when condition",
+            "case",
+            "switch"
+          ],
+          "activity_mapping": {
+            "primary_activity": "If/Else Control",
+            "confidence": 0.85,
+            "required_parameters": ["condition"],
+            "control_type": "logic"
+          },
+          "context_clues": [
+            "then",
+            "else",
+            "otherwise",
+            "condition",
+            "true",
+            "false"
+          ]
+        },
+        "parallel_execution": {
+          "keywords": [
+            "simultaneously",
+            "at the same time",
+            "parallel",
+            "concurrently",
+            "in parallel",
+            "together",
+            "multiple tasks"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Parallel Control",
+            "confidence": 0.82,
+            "control_type": "logic"
+          }
+        },
+        "loop_iteration": {
+          "keywords": [
+            "repeat",
+            "loop",
+            "for each",
+            "iterate",
+            "while",
+            "until",
+            "multiple times",
+            "repeatedly"
+          ],
+          "activity_mapping": {
+            "primary_activity": "While Loop",
+            "confidence": 0.78,
+            "control_type": "logic"
+          }
+        },
+        "wait_delay": {
+          "keywords": [
+            "wait",
+            "delay",
+            "pause",
+            "sleep",
+            "hold",
+            "wait for",
+            "after delay",
+            "timeout"
+          ],
+          "activity_mapping": {
+            "primary_activity": "Wait",
+            "confidence": 0.9,
+            "required_parameters": ["duration"]
+          }
+        }
+      }
+    }
+  },
+  "phrase_patterns": {
+    "action_object_patterns": [
+      {
+        "pattern": "{action} {object}",
+        "examples": ["check server", "backup database", "restart service"],
+        "confidence_boost": 0.1
+      },
+      {
+        "pattern": "{action} {object} {preposition} {target}",
+        "examples": ["copy file to server", "move data to archive"],
+        "confidence_boost": 0.15
+      },
+      {
+        "pattern": "when {condition} then {action}",
+        "examples": ["when disk full then send alert"],
+        "confidence_boost": 0.2,
+        "implies_conditional": true
+      }
+    ],
+    "business_process_indicators": [
+      {
+        "keywords": ["onboard", "onboarding", "new employee", "new hire"],
+        "suggests_workflow": "employee_onboarding",
+        "confidence": 0.85
+      },
+      {
+        "keywords": ["offboard", "offboarding", "terminate", "leaving"],
+        "suggests_workflow": "employee_offboarding",
+        "confidence": 0.85
+      },
+      {
+        "keywords": ["incident", "security breach", "attack", "malware"],
+        "suggests_workflow": "security_incident_response",
+        "confidence": 0.8
+      },
+      {
+        "keywords": ["backup", "restore", "disaster recovery"],
+        "suggests_workflow": "backup_and_recovery",
+        "confidence": 0.75
+      }
+    ]
+  },
+  "context_enhancement": {
+    "system_type_indicators": {
+      "active_directory": {
+        "keywords": [
+          "ad",
+          "active directory",
+          "domain",
+          "ldap",
+          "user account"
+        ],
+        "enhances_activities": [
+          "AD Create User",
+          "AD Disable User",
+          "AD Reset Password"
+        ]
+      },
+      "database": {
+        "keywords": ["database", "db", "sql", "mysql", "oracle", "postgres"],
+        "enhances_activities": [
+          "Database Backup",
+          "Database Query",
+          "Database Health Check"
+        ]
+      },
+      "network": {
+        "keywords": ["network", "ip", "ping", "connectivity", "firewall"],
+        "enhances_activities": ["Ping", "Network Isolation", "Check Port"]
+      },
+      "email": {
+        "keywords": ["email", "smtp", "notification", "alert", "message"],
+        "enhances_activities": ["Send Email", "Send Alert"]
+      }
+    },
+    "urgency_indicators": {
+      "high_priority": {
+        "keywords": ["urgent", "critical", "emergency", "immediate", "asap"],
+        "parameter_adjustments": {
+          "priority": "High",
+          "timeout": "reduced",
+          "retry_count": "increased"
+        }
+      },
+      "low_priority": {
+        "keywords": ["routine", "scheduled", "regular", "maintenance"],
+        "parameter_adjustments": {
+          "priority": "Normal",
+          "retry_count": "standard"
+        }
+      }
+    }
+  },
+  "disambiguation_rules": {
+    "conflict_resolution": [
+      {
+        "scenario": "Multiple high-confidence matches",
+        "resolution": "Select activity with highest confidence, note alternatives"
+      },
+      {
+        "scenario": "Generic terms like 'check'",
+        "resolution": "Require additional context or ask for clarification"
+      },
+      {
+        "scenario": "Business process vs specific activity",
+        "resolution": "Prefer specific activity, suggest business process workflow"
+      }
+    ],
+    "clarification_prompts": {
+      "ambiguous_check": {
+        "trigger": ["check", "monitor", "verify"],
+        "prompt": "What specifically would you like to check? (server, service, file, database, etc.)"
+      },
+      "ambiguous_send": {
+        "trigger": ["send", "notify", "alert"],
+        "prompt": "How would you like to send the notification? (email, SMS, Teams, etc.)"
+      },
+      "missing_target": {
+        "trigger": "High confidence activity but missing required parameters",
+        "prompt": "I can help with {activity}. Could you specify {missing_parameters}?"
+      }
+    }
+  },
+  "learning_indicators": {
+    "track_for_improvement": [
+      "Low confidence matches that were manually corrected",
+      "Frequently requested activities not in current mapping",
+      "Common phrase patterns not captured",
+      "Business processes that need dedicated workflows"
+    ],
+    "feedback_integration": {
+      "user_corrections": "Update confidence scores and add new keyword variations",
+      "successful_matches": "Boost confidence for confirmed patterns",
+      "failed_matches": "Analyze gaps and add missing mappings"
+    }
+  }
+}

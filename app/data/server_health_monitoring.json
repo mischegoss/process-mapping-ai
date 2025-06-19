@@ -1,0 +1,261 @@
+{
+  "workflow_metadata": {
+    "id": "server_health_monitoring",
+    "name": "Server Health Monitoring",
+    "description": "Simple workflow that pings a server and sends email notification based on status",
+    "complexity": "simple",
+    "category": "monitoring",
+    "estimated_duration": "30 seconds",
+    "business_value": "Automated server uptime monitoring with immediate notifications",
+    "use_cases": [
+      "Server uptime monitoring",
+      "Network connectivity checks",
+      "Infrastructure health alerts",
+      "Basic service monitoring"
+    ],
+    "tags": ["monitoring", "ping", "email", "conditional", "infrastructure"],
+    "resolve_reference": "https://docs.resolve.io/express/Builder/Workflow%20Designer/welcome-to-the-workflow-designer/",
+    "demo_scenario": "Perfect opening demo - everyone understands server monitoring",
+    "demo_duration": "2 minutes"
+  },
+  "workflow_definition": {
+    "input_parameters": {
+      "server_ip": {
+        "type": "string",
+        "required": true,
+        "description": "IP address or hostname of server to monitor",
+        "example": "192.168.1.100",
+        "validation": "Valid IP address or resolvable hostname"
+      },
+      "timeout_seconds": {
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "description": "Ping timeout in seconds",
+        "range": "1-30"
+      },
+      "alert_recipients": {
+        "type": "array",
+        "required": true,
+        "description": "Email addresses to notify",
+        "example": ["admin@company.com", "ops-team@company.com"]
+      }
+    },
+    "global_variables": {
+      "server_status": {
+        "type": "string",
+        "description": "Result of ping operation",
+        "possible_values": ["Success", "Failure", "Timeout"]
+      },
+      "ping_response_time": {
+        "type": "integer",
+        "description": "Response time in milliseconds"
+      },
+      "alert_message": {
+        "type": "string",
+        "description": "Dynamic message content for email"
+      },
+      "timestamp": {
+        "type": "datetime",
+        "description": "When the check was performed"
+      }
+    },
+    "activities": [
+      {
+        "step": 1,
+        "activity_id": "ping_server",
+        "activity_type": "Ping",
+        "activity_name": "Check Server Status",
+        "category": "Network",
+        "description": "Execute ping command to check server connectivity",
+        "settings": {
+          "host": "%server_ip%",
+          "timeout": "%timeout_seconds%",
+          "packet_count": 3,
+          "packet_size": 32
+        },
+        "output_variables": {
+          "ping_result": "%ping_server.Result%",
+          "response_time": "%ping_server.ResponseTime%",
+          "packet_loss": "%ping_server.PacketLoss%"
+        },
+        "error_handling": {
+          "on_timeout": "Continue with Failure status",
+          "on_network_error": "Continue with Failure status",
+          "retry_count": 2,
+          "retry_interval": 3
+        },
+        "timeout_setting": 30
+      },
+      {
+        "step": 2,
+        "activity_id": "evaluate_status",
+        "activity_type": "If/Else Control",
+        "activity_name": "Determine Server Status",
+        "category": "Logic",
+        "description": "Branch workflow based on ping results",
+        "branches": [
+          {
+            "branch_id": "success_branch",
+            "condition": {
+              "type": "Predefined",
+              "value": "Success",
+              "expression": "%ping_server.Result% == 'Success'"
+            },
+            "description": "Server responded successfully",
+            "next_activities": ["send_success_email"]
+          },
+          {
+            "branch_id": "failure_branch",
+            "condition": {
+              "type": "Default",
+              "description": "Server failed to respond or timeout"
+            },
+            "next_activities": ["send_failure_email"]
+          }
+        ],
+        "branch_evaluation": "Sequential from left to right"
+      },
+      {
+        "step": 3,
+        "activity_id": "send_success_email",
+        "activity_type": "Send Email",
+        "activity_name": "Send Success Notification",
+        "category": "Communication",
+        "description": "Notify administrators that server is responding",
+        "branch": "success_branch",
+        "settings": {
+          "recipients": "%alert_recipients%",
+          "subject": "✅ Server Health Check - %server_ip% is UP",
+          "message_type": "Custom",
+          "body": {
+            "template": "Server %server_ip% is responding normally.\n\nDetails:\n- Response Time: %ping_server.ResponseTime% ms\n- Packet Loss: %ping_server.PacketLoss%%\n- Check Time: %timestamp%\n- Status: HEALTHY\n\nNo action required.",
+            "format": "text"
+          },
+          "priority": "Normal",
+          "send_recovery_notification": false
+        },
+        "output_variables": {
+          "email_sent": "%send_success_email.Result%"
+        }
+      },
+      {
+        "step": 4,
+        "activity_id": "send_failure_email",
+        "activity_type": "Send Email",
+        "activity_name": "Send Failure Alert",
+        "category": "Communication",
+        "description": "Alert administrators that server is not responding",
+        "branch": "failure_branch",
+        "settings": {
+          "recipients": "%alert_recipients%",
+          "subject": "🚨 ALERT: Server Health Check - %server_ip% is DOWN",
+          "message_type": "Custom",
+          "body": {
+            "template": "URGENT: Server %server_ip% is not responding!\n\nDetails:\n- Status: FAILED\n- Error: %ping_server.Error%\n- Check Time: %timestamp%\n\nImmediate action required:\n1. Verify server is powered on\n2. Check network connectivity\n3. Investigate service status\n4. Contact on-call engineer if needed\n\nThis is an automated alert from server monitoring system.",
+            "format": "text"
+          },
+          "priority": "High",
+          "send_recovery_notification": true
+        },
+        "output_variables": {
+          "alert_sent": "%send_failure_email.Result%"
+        }
+      }
+    ],
+    "workflow_flow": {
+      "start": "ping_server",
+      "sequence": [
+        {
+          "from": "ping_server",
+          "to": "evaluate_status",
+          "condition": "Always"
+        },
+        {
+          "from": "evaluate_status",
+          "to": "send_success_email",
+          "condition": "Success branch"
+        },
+        {
+          "from": "evaluate_status",
+          "to": "send_failure_email",
+          "condition": "Failure branch"
+        }
+      ],
+      "end_conditions": [
+        "send_success_email completes",
+        "send_failure_email completes"
+      ]
+    },
+    "error_handling": {
+      "global_timeout": 300,
+      "on_activity_failure": "Continue to notification",
+      "error_notification": {
+        "enabled": true,
+        "recipients": "%alert_recipients%",
+        "subject": "Workflow Error: Server Monitoring Failed"
+      }
+    }
+  },
+  "execution_requirements": {
+    "modules": [
+      {
+        "name": "Network Module",
+        "required": true,
+        "purpose": "Execute ping commands"
+      },
+      {
+        "name": "Email Module",
+        "required": true,
+        "purpose": "Send notifications"
+      }
+    ],
+    "permissions": [
+      "Network access to target servers",
+      "SMTP access for email sending"
+    ],
+    "prerequisites": [
+      "Email server configured",
+      "Network connectivity to target servers",
+      "Valid recipient email addresses"
+    ]
+  },
+  "demo_configuration": {
+    "sample_inputs": {
+      "server_ip": "demo-server.company.com",
+      "timeout_seconds": 5,
+      "alert_recipients": ["admin@company.com", "ops@company.com"]
+    },
+    "expected_outputs": {
+      "success_scenario": {
+        "ping_result": "Success",
+        "response_time": "< 50ms",
+        "email_subject": "✅ Server Health Check - demo-server.company.com is UP"
+      },
+      "failure_scenario": {
+        "ping_result": "Failure",
+        "email_subject": "🚨 ALERT: Server Health Check - demo-server.company.com is DOWN"
+      }
+    },
+    "demo_talking_points": [
+      "Simple 4-step workflow everyone can understand",
+      "Shows basic conditional logic (if/else)",
+      "Demonstrates variable usage and data flow",
+      "Real business value - prevents server downtime",
+      "Foundation for more complex monitoring workflows"
+    ]
+  },
+  "validation_data": {
+    "resolve_workflow_equivalent": {
+      "description": "Based on documented ping-check-email example from Resolve Workflow Designer documentation",
+      "activities_match": [
+        "Ping activity - Execute ping command",
+        "If/Else control - Branch on Success/Failure",
+        "Send Email activity - Notify administrators"
+      ],
+      "documentation_quote": "The following workflow, which sends a status email after running a ping check, provides an example of the typical design and progression of a sequence of activities",
+      "source_url": "https://docs.resolve.io/express/Builder/Workflow%20Designer/welcome-to-the-workflow-designer/"
+    },
+    "complexity_justification": "Simple workflow with linear flow, basic branching, and standard activities"
+  }
+}

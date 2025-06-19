@@ -1,0 +1,979 @@
+{
+  "metadata": {
+    "file_name": "activities_infrastructure.json",
+    "description": "Core infrastructure and system management activities for Resolve Actions",
+    "version": "1.0",
+    "last_updated": "2025-06-18",
+    "total_categories": 5,
+    "total_activities": 38,
+    "resolve_documentation_base": "https://docs.resolve.io/actions/List%20of%20Activities/",
+    "scope": "Infrastructure operations including Active Directory, network monitoring, service management, Windows operations, and process control",
+    "usage_priority": "high"
+  },
+  "activity_categories": {
+    "active_directory": {
+      "category_name": "Active Directory",
+      "description": "User, group, and organizational unit management in Microsoft Active Directory",
+      "resolve_url": "https://docs.resolve.io/actions/List%20of%20Activities/Active%20Directory/",
+      "total_activities": 7,
+      "common_use_cases": [
+        "Employee onboarding and account creation",
+        "User offboarding and account management",
+        "Group membership administration",
+        "Password resets and account maintenance",
+        "Directory queries and reporting"
+      ],
+      "integration_requirements": {
+        "modules": ["Active Directory Module"],
+        "connectivity": "Domain controller access",
+        "authentication": "Service account with AD permissions",
+        "ports": ["389 (LDAP)", "636 (LDAPS)", "3268 (Global Catalog)"]
+      },
+      "activities": {
+        "ad_copy_user": {
+          "activity_name": "AD Copy User",
+          "description": "Creates a new user account by copying properties from an existing user",
+          "category": "User Management",
+          "complexity": "moderate",
+          "required_parameters": [
+            "source_username",
+            "new_username",
+            "first_name",
+            "last_name",
+            "login_password"
+          ],
+          "optional_parameters": [
+            "email",
+            "initials",
+            "full_name",
+            "additional_properties",
+            "user_must_change_password",
+            "organizational_unit"
+          ],
+          "output_variables": [
+            "creation_result",
+            "user_distinguished_name",
+            "copied_properties"
+          ],
+          "error_handling": {
+            "common_errors": [
+              "source_user_not_found",
+              "target_user_already_exists",
+              "insufficient_permissions",
+              "invalid_organizational_unit"
+            ],
+            "retry_strategy": "manual_intervention_required"
+          },
+          "resolve_documentation": "https://docs.resolve.io/express/List%20of%20Activities/Active%20Directory/Accounts/ad-copy-user",
+          "related_activities": [
+            "AD Get Property",
+            "AD Set Property",
+            "AD Add User to Group"
+          ],
+          "business_value": "Streamlines user creation by replicating existing user configurations"
+        },
+        "ad_get_property": {
+          "activity_name": "AD Get Property",
+          "description": "Retrieves specific property values from Active Directory objects",
+          "category": "Information Retrieval",
+          "complexity": "simple",
+          "required_parameters": ["object_name", "property_name", "host_name"],
+          "optional_parameters": [
+            "username",
+            "password",
+            "organizational_unit"
+          ],
+          "output_variables": [
+            "property_value",
+            "property_type",
+            "retrieval_status"
+          ],
+          "resolve_documentation": "https://docs.resolve.io/actions/List%20of%20Activities/Active%20Directory/Accounts/ad-get-property/",
+          "common_properties": [
+            "Employee ID",
+            "Department",
+            "Manager",
+            "Email Address",
+            "Phone Number",
+            "Last Login Time"
+          ]
+        },
+        "ad_list_group": {
+          "activity_name": "AD List Group",
+          "description": "Lists the content of a specific group in Active Directory including users, other groups, and OUs",
+          "category": "Information Retrieval",
+          "complexity": "simple",
+          "required_parameters": ["group_name", "host_name"],
+          "optional_parameters": ["recursive", "username", "password"],
+          "output_variables": [
+            "group_members",
+            "member_count",
+            "nested_groups"
+          ],
+          "resolve_documentation": "https://docs.resolve.io/express/List%20of%20Activities/Active%20Directory/Groups/ad-list-group"
+        },
+        "ad_list_ou": {
+          "activity_name": "AD List OU",
+          "description": "Lists the content of a specific organizational unit including users, computers, other OUs, and groups",
+          "category": "Information Retrieval",
+          "complexity": "simple",
+          "required_parameters": ["path", "host_name"],
+          "optional_parameters": [
+            "recursive",
+            "filter",
+            "username",
+            "password"
+          ],
+          "output_variables": ["ou_contents", "object_count", "object_types"],
+          "resolve_documentation": "https://docs.resolve.io/actions/List%20of%20Activities/Active%20Directory/ad-list-ou-activity"
+        },
+        "ad_list_user_groups": {
+          "activity_name": "AD List User Groups",
+          "description": "Lists all groups that a specific user belongs to",
+          "category": "Information Retrieval",
+          "complexity": "simple",
+          "required_parameters": ["account_name", "host_name"],
+          "optional_parameters": ["username", "password"],
+          "output_variables": [
+            "user_groups",
+            "group_count",
+            "membership_details"
+          ],
+          "resolve_documentation": "https://docs.resolve.io/express/List%20of%20Activities/Active%20Directory/Groups/ad-list-user-groups"
+        },
+        "ad_remove_from_group": {
+          "activity_name": "AD Remove From Group",
+          "description": "Removes a user or object from an Active Directory group",
+          "category": "Group Management",
+          "complexity": "simple",
+          "required_parameters": ["object_name", "group_name", "host_name"],
+          "optional_parameters": ["username", "password"],
+          "output_variables": [
+            "removal_result",
+            "group_membership_updated",
+            "removal_timestamp"
+          ],
+          "resolve_documentation": "https://docs.resolve.io/express/SaaS/List%20of%20Activities/Active%20Directory/Groups/ad-remove-from-group/"
+        },
+        "ad_search_user_logon_name": {
+          "activity_name": "AD Search User Logon Name",
+          "description": "Searches for user logon names based on specified criteria",
+          "category": "Search Operations",
+          "complexity": "moderate",
+          "required_parameters": [
+            "property_name",
+            "property_value",
+            "host_name"
+          ],
+          "optional_parameters": ["username", "password"],
+          "output_variables": [
+            "matching_logon_names",
+            "search_results_count",
+            "search_criteria"
+          ],
+          "resolve_documentation": "https://docs.resolve.io/actions/List%20of%20Activities/Active%20Directory/Accounts/ad-search-user-logon-name/"
+        }
+      }
+    },
+    "network": {
+      "category_name": "Network",
+      "description": "Network connectivity testing, monitoring, and basic network operations",
+      "resolve_url": "https://docs.resolve.io/actions/List%20of%20Activities/Network/",
+      "total_activities": 8,
+      "common_use_cases": [
+        "Server and service connectivity monitoring",
+        "Network health checks and diagnostics",
+        "Port availability testing",
+        "Network performance measurement",
+        "Infrastructure uptime validation"
+      ],
+      "integration_requirements": {
+        "modules": ["Network Module"],
+        "connectivity": "Network access to target systems",
+        "protocols": ["ICMP", "TCP", "UDP"],
+        "firewall_considerations": "Ensure appropriate ports are open"
+      },
+      "activities": {
+        "ping": {
+          "activity_name": "Ping",
+          "description": "Tests network connectivity to a host using ICMP ping commands",
+          "category": "Connectivity Testing",
+          "complexity": "simple",
+          "required_parameters": ["host_name"],
+          "optional_parameters": ["timeout", "packet_count", "packet_size"],
+          "output_variables": [
+            "ping_result",
+            "response_time",
+            "packet_loss",
+            "connectivity_status"
+          ],
+          "error_handling": {
+            "common_errors": [
+              "host_unreachable",
+              "timeout_exceeded",
+              "network_error",
+              "dns_resolution_failed"
+            ],
+            "retry_strategy": "automatic_with_backoff"
+          },
+          "resolve_documentation": "https://docs.resolve.io/express-saas/List%20of%20Activities/Network/ping-activity/",
+          "related_activities": ["Ping Latency", "Check Port", "DNS Lookup"],
+          "business_value": "Essential for infrastructure monitoring and troubleshooting network connectivity issues"
+        },
+        "ping_latency": {
+          "activity_name": "Ping Latency",
+          "description": "Measures network latency by retrieving elapsed time between ping command and response",
+          "category": "Performance Monitoring",
+          "complexity": "simple",
+          "required_parameters": ["hostname"],
+          "optional_parameters": ["buffer_size", "packet_count"],
+          "output_variables": [
+            "round_trip_time",
+            "time_to_live",
+            "latency_measurements",
+            "average_latency"
+          ],
+          "resolve_documentation": "https://docs.resolve.io/express/SaaS/List%20of%20Activities/Network/ping-latency-activity/"
+        },
+        "check_port": {
+          "activity_name": "Check Port",
+          "description": "Tests if a specific TCP port is open and accessible on a target host",
+          "category": "Connectivity Testing",
+          "complexity": "simple",
+          "required_parameters": ["host_name", "port_number"],
+          "optional_parameters": ["timeout", "protocol"],
+          "output_variables": [
+            "port_status",
+            "connection_result",
+            "response_time"
+          ]
+        },
+        "dns_lookup": {
+          "activity_name": "DNS Lookup",
+          "description": "Performs DNS resolution to convert hostnames to IP addresses or vice versa",
+          "category": "Name Resolution",
+          "complexity": "simple",
+          "required_parameters": ["hostname_or_ip"],
+          "optional_parameters": ["dns_server", "record_type"],
+          "output_variables": [
+            "resolved_address",
+            "resolution_status",
+            "dns_records"
+          ]
+        },
+        "traceroute": {
+          "activity_name": "Traceroute",
+          "description": "Traces the network path to a destination host showing intermediate hops",
+          "category": "Network Diagnostics",
+          "complexity": "moderate",
+          "required_parameters": ["destination_host"],
+          "optional_parameters": ["max_hops", "timeout"],
+          "output_variables": ["route_hops", "total_hops", "route_analysis"]
+        },
+        "get_network_adapter_info": {
+          "activity_name": "Get Network Adapter Info",
+          "description": "Retrieves information about network adapters on a system",
+          "category": "System Information",
+          "complexity": "simple",
+          "required_parameters": ["host_name"],
+          "optional_parameters": ["adapter_name", "username", "password"],
+          "output_variables": [
+            "adapter_details",
+            "ip_configuration",
+            "adapter_status"
+          ]
+        },
+        "wake_on_lan": {
+          "activity_name": "Wake on LAN",
+          "description": "Sends a Wake-on-LAN magic packet to wake up a remote computer",
+          "category": "Remote Management",
+          "complexity": "simple",
+          "required_parameters": ["mac_address"],
+          "optional_parameters": ["broadcast_address", "port"],
+          "output_variables": ["packet_sent", "wake_status"]
+        },
+        "network_scan": {
+          "activity_name": "Network Scan",
+          "description": "Scans a network range to discover active hosts and services",
+          "category": "Network Discovery",
+          "complexity": "moderate",
+          "required_parameters": ["network_range"],
+          "optional_parameters": ["port_range", "scan_type", "timeout"],
+          "output_variables": [
+            "discovered_hosts",
+            "active_services",
+            "scan_results"
+          ]
+        }
+      }
+    },
+    "services": {
+      "category_name": "Services",
+      "description": "Windows and Linux service management including start, stop, restart, and monitoring operations",
+      "resolve_url": "https://docs.resolve.io/actions/List%20of%20Activities/Services/",
+      "total_activities": 11,
+      "common_use_cases": [
+        "Service restart procedures and maintenance",
+        "Service health monitoring and status checks",
+        "Automated service recovery and failover",
+        "Service startup configuration management",
+        "Application deployment and service lifecycle"
+      ],
+      "integration_requirements": {
+        "modules": ["Services Module"],
+        "connectivity": "Administrative access to target systems",
+        "authentication": "Service account with service control privileges",
+        "platforms": ["Windows", "Linux"]
+      },
+      "activities": {
+        "start_service": {
+          "activity_name": "Start Service",
+          "description": "Starts a stopped or inactive service on a target system",
+          "category": "Service Control",
+          "complexity": "simple",
+          "required_parameters": ["service_name", "host_name"],
+          "optional_parameters": [
+            "username",
+            "password",
+            "startup_parameters",
+            "timeout"
+          ],
+          "output_variables": [
+            "start_result",
+            "service_status",
+            "startup_time"
+          ],
+          "error_handling": {
+            "common_errors": [
+              "service_not_found",
+              "access_denied",
+              "service_disabled",
+              "dependency_failure"
+            ],
+            "retry_strategy": "automatic_with_dependency_check"
+          },
+          "related_activities": [
+            "Stop Service",
+            "Restart Service",
+            "Get Service Status"
+          ],
+          "business_value": "Ensures critical services are running for business continuity"
+        },
+        "stop_service": {
+          "activity_name": "Stop Service",
+          "description": "Stops a running service gracefully on a target system",
+          "category": "Service Control",
+          "complexity": "simple",
+          "required_parameters": ["service_name", "host_name"],
+          "optional_parameters": [
+            "username",
+            "password",
+            "force_stop",
+            "timeout"
+          ],
+          "output_variables": ["stop_result", "service_status", "stop_time"],
+          "resolve_documentation": "https://docs.resolve.io/actions/List%20of%20Activities/Services/stop-service-activity/"
+        },
+        "restart_service": {
+          "activity_name": "Restart Service",
+          "description": "Restarts a service by stopping it and then starting it again",
+          "category": "Service Control",
+          "complexity": "simple",
+          "required_parameters": ["service_name", "host_name"],
+          "optional_parameters": [
+            "username",
+            "password",
+            "restart_timeout",
+            "verify_startup"
+          ],
+          "output_variables": [
+            "restart_result",
+            "final_status",
+            "restart_duration"
+          ]
+        },
+        "get_service_status": {
+          "activity_name": "Get Service Status",
+          "description": "Retrieves the current status of a service (Running, Stopped, etc.)",
+          "category": "Service Monitoring",
+          "complexity": "simple",
+          "required_parameters": ["service_name", "host_name"],
+          "optional_parameters": ["username", "password"],
+          "output_variables": [
+            "service_status",
+            "status_description",
+            "process_id"
+          ]
+        },
+        "get_service_startup_type": {
+          "activity_name": "Get Service Startup Type",
+          "description": "Returns the service's startup type configuration (Manual/Auto/Disabled)",
+          "category": "Service Configuration",
+          "complexity": "simple",
+          "required_parameters": ["service_name", "host_name"],
+          "optional_parameters": ["username", "password"],
+          "output_variables": [
+            "startup_type",
+            "startup_configuration",
+            "service_info"
+          ],
+          "resolve_documentation": "https://docs.resolve.io/actions/List%20of%20Activities/Services/get-service-startup-type-activity/"
+        },
+        "set_service_startup_type": {
+          "activity_name": "Set Service Startup Type",
+          "description": "Configures how a service starts when the system boots",
+          "category": "Service Configuration",
+          "complexity": "simple",
+          "required_parameters": ["service_name", "startup_type", "host_name"],
+          "optional_parameters": ["username", "password"],
+          "output_variables": [
+            "configuration_result",
+            "previous_startup_type",
+            "new_startup_type"
+          ]
+        },
+        "list_services": {
+          "activity_name": "List Services",
+          "description": "Lists all services installed on a system with their current status",
+          "category": "Service Discovery",
+          "complexity": "simple",
+          "required_parameters": ["host_name"],
+          "optional_parameters": [
+            "username",
+            "password",
+            "status_filter",
+            "service_type"
+          ],
+          "output_variables": [
+            "service_list",
+            "service_count",
+            "service_details"
+          ]
+        },
+        "get_service_dependencies": {
+          "activity_name": "Get Service Dependencies",
+          "description": "Retrieves the dependency relationships for a specific service",
+          "category": "Service Analysis",
+          "complexity": "moderate",
+          "required_parameters": ["service_name", "host_name"],
+          "optional_parameters": ["username", "password", "include_dependents"],
+          "output_variables": [
+            "dependencies",
+            "dependent_services",
+            "dependency_tree"
+          ]
+        },
+        "install_service": {
+          "activity_name": "Install Service",
+          "description": "Installs a new Windows service from an executable file",
+          "category": "Service Installation",
+          "complexity": "moderate",
+          "required_parameters": [
+            "service_name",
+            "executable_path",
+            "host_name"
+          ],
+          "optional_parameters": [
+            "display_name",
+            "description",
+            "startup_type",
+            "service_account"
+          ],
+          "output_variables": [
+            "installation_result",
+            "service_created",
+            "service_handle"
+          ]
+        },
+        "uninstall_service": {
+          "activity_name": "Uninstall Service",
+          "description": "Removes a service from the system",
+          "category": "Service Management",
+          "complexity": "moderate",
+          "required_parameters": ["service_name", "host_name"],
+          "optional_parameters": ["username", "password", "force_uninstall"],
+          "output_variables": [
+            "uninstall_result",
+            "service_removed",
+            "cleanup_status"
+          ]
+        },
+        "wait_for_service": {
+          "activity_name": "Wait for Service",
+          "description": "Waits for a service to reach a specific status before continuing",
+          "category": "Service Synchronization",
+          "complexity": "simple",
+          "required_parameters": [
+            "service_name",
+            "expected_status",
+            "host_name"
+          ],
+          "optional_parameters": [
+            "timeout",
+            "polling_interval",
+            "username",
+            "password"
+          ],
+          "output_variables": ["wait_result", "final_status", "wait_duration"]
+        }
+      }
+    },
+    "windows": {
+      "category_name": "Windows",
+      "description": "Windows-specific system operations and administrative tasks",
+      "resolve_url": "https://docs.resolve.io/actions/List%20of%20Activities/Windows/",
+      "total_activities": 4,
+      "common_use_cases": [
+        "Windows system administration and maintenance",
+        "Registry operations and configuration management",
+        "Windows event log monitoring and analysis",
+        "System information gathering and reporting"
+      ],
+      "integration_requirements": {
+        "modules": ["Windows Module"],
+        "connectivity": "WMI and administrative access",
+        "authentication": "Windows credentials with appropriate privileges",
+        "platforms": ["Windows Server", "Windows Desktop"]
+      },
+      "activities": {
+        "get_registry_value": {
+          "activity_name": "Get Registry Value",
+          "description": "Retrieves a value from the Windows Registry",
+          "category": "Registry Operations",
+          "complexity": "simple",
+          "required_parameters": ["registry_key", "value_name", "host_name"],
+          "optional_parameters": ["username", "password", "registry_hive"],
+          "output_variables": ["registry_value", "value_type", "read_status"],
+          "error_handling": {
+            "common_errors": [
+              "key_not_found",
+              "value_not_found",
+              "access_denied",
+              "invalid_registry_path"
+            ],
+            "retry_strategy": "manual_verification_required"
+          },
+          "business_value": "Essential for reading Windows configuration settings and application parameters"
+        },
+        "set_registry_value": {
+          "activity_name": "Set Registry Value",
+          "description": "Creates or modifies a value in the Windows Registry",
+          "category": "Registry Operations",
+          "complexity": "moderate",
+          "required_parameters": [
+            "registry_key",
+            "value_name",
+            "value_data",
+            "host_name"
+          ],
+          "optional_parameters": [
+            "value_type",
+            "create_key_if_missing",
+            "username",
+            "password"
+          ],
+          "output_variables": [
+            "operation_result",
+            "previous_value",
+            "registry_updated"
+          ]
+        },
+        "get_event_log": {
+          "activity_name": "Get Event Log",
+          "description": "Retrieves entries from Windows Event Logs for monitoring and troubleshooting",
+          "category": "Event Log Management",
+          "complexity": "moderate",
+          "required_parameters": ["log_name", "host_name"],
+          "optional_parameters": [
+            "event_type",
+            "time_range",
+            "source",
+            "event_id",
+            "maximum_records"
+          ],
+          "output_variables": ["event_entries", "entry_count", "log_analysis"]
+        },
+        "get_system_info": {
+          "activity_name": "Get System Info",
+          "description": "Retrieves comprehensive Windows system information including hardware and OS details",
+          "category": "System Information",
+          "complexity": "simple",
+          "required_parameters": ["host_name"],
+          "optional_parameters": ["username", "password", "info_category"],
+          "output_variables": [
+            "system_details",
+            "hardware_info",
+            "os_information",
+            "performance_data"
+          ]
+        }
+      }
+    },
+    "processes": {
+      "category_name": "Processes",
+      "description": "Process management and monitoring operations for both Windows and Linux systems",
+      "resolve_url": "https://docs.resolve.io/actions/List%20of%20Activities/Processes/",
+      "total_activities": 8,
+      "common_use_cases": [
+        "Process monitoring and health checks",
+        "Application lifecycle management",
+        "Resource usage monitoring and optimization",
+        "Process termination and cleanup",
+        "System performance analysis"
+      ],
+      "integration_requirements": {
+        "modules": ["Processes Module"],
+        "connectivity": "System-level access to target machines",
+        "authentication": "Administrative privileges for process control",
+        "platforms": ["Windows", "Linux", "Unix"]
+      },
+      "activities": {
+        "get_process_list": {
+          "activity_name": "Get Process List",
+          "description": "Retrieves a list of all running processes on a system",
+          "category": "Process Monitoring",
+          "complexity": "simple",
+          "required_parameters": ["host_name"],
+          "optional_parameters": [
+            "username",
+            "password",
+            "process_name_filter",
+            "include_system_processes"
+          ],
+          "output_variables": [
+            "process_list",
+            "process_count",
+            "system_processes",
+            "user_processes"
+          ],
+          "error_handling": {
+            "common_errors": [
+              "access_denied",
+              "connection_failed",
+              "authentication_failed"
+            ],
+            "retry_strategy": "automatic_with_credential_verification"
+          },
+          "business_value": "Critical for system monitoring and identifying resource usage patterns"
+        },
+        "get_process": {
+          "activity_name": "Get Process",
+          "description": "Retrieves detailed information about a specific process",
+          "category": "Process Information",
+          "complexity": "simple",
+          "required_parameters": ["process_identifier", "host_name"],
+          "optional_parameters": ["username", "password", "identifier_type"],
+          "output_variables": [
+            "process_details",
+            "process_status",
+            "resource_usage",
+            "process_hierarchy"
+          ]
+        },
+        "start_process": {
+          "activity_name": "Start Process",
+          "description": "Launches a new process or application on a target system",
+          "category": "Process Control",
+          "complexity": "moderate",
+          "required_parameters": ["executable_path", "host_name"],
+          "optional_parameters": [
+            "arguments",
+            "working_directory",
+            "username",
+            "password",
+            "environment_variables"
+          ],
+          "output_variables": ["process_id", "start_result", "process_handle"]
+        },
+        "kill_process": {
+          "activity_name": "Kill Process",
+          "description": "Terminates a running process forcefully",
+          "category": "Process Control",
+          "complexity": "simple",
+          "required_parameters": ["process_identifier", "host_name"],
+          "optional_parameters": [
+            "username",
+            "password",
+            "force_kill",
+            "identifier_type"
+          ],
+          "output_variables": [
+            "termination_result",
+            "process_killed",
+            "exit_code"
+          ]
+        },
+        "stop_process": {
+          "activity_name": "Stop Process",
+          "description": "Gracefully stops a running process by sending termination signals",
+          "category": "Process Control",
+          "complexity": "simple",
+          "required_parameters": ["process_identifier", "host_name"],
+          "optional_parameters": [
+            "username",
+            "password",
+            "timeout",
+            "termination_method"
+          ],
+          "output_variables": [
+            "stop_result",
+            "graceful_shutdown",
+            "process_response"
+          ]
+        },
+        "wait_for_process": {
+          "activity_name": "Wait for Process",
+          "description": "Waits for a process to complete execution or reach a specific state",
+          "category": "Process Synchronization",
+          "complexity": "simple",
+          "required_parameters": ["process_identifier", "host_name"],
+          "optional_parameters": [
+            "timeout",
+            "expected_state",
+            "polling_interval"
+          ],
+          "output_variables": [
+            "wait_result",
+            "final_state",
+            "exit_code",
+            "execution_duration"
+          ]
+        },
+        "get_process_performance": {
+          "activity_name": "Get Process Performance",
+          "description": "Retrieves performance metrics for a specific process including CPU and memory usage",
+          "category": "Performance Monitoring",
+          "complexity": "moderate",
+          "required_parameters": ["process_identifier", "host_name"],
+          "optional_parameters": [
+            "username",
+            "password",
+            "monitoring_duration",
+            "metric_types"
+          ],
+          "output_variables": [
+            "cpu_usage",
+            "memory_usage",
+            "io_statistics",
+            "performance_history"
+          ]
+        },
+        "check_process_running": {
+          "activity_name": "Check Process Running",
+          "description": "Verifies if a specific process is currently running on the system",
+          "category": "Process Validation",
+          "complexity": "simple",
+          "required_parameters": ["process_name", "host_name"],
+          "optional_parameters": ["username", "password", "exact_match"],
+          "output_variables": [
+            "process_running",
+            "process_count",
+            "matching_processes"
+          ]
+        }
+      }
+    }
+  },
+  "cross_category_workflows": {
+    "common_workflow_patterns": [
+      {
+        "workflow_name": "Server Health Check",
+        "description": "Comprehensive server monitoring combining network, service, and process checks",
+        "activities_sequence": [
+          "Ping",
+          "Get Service Status",
+          "Get Process List",
+          "Get System Info"
+        ],
+        "use_case": "Automated infrastructure monitoring",
+        "complexity": "moderate",
+        "estimated_duration": "2-5 minutes"
+      },
+      {
+        "workflow_name": "Service Recovery",
+        "description": "Automatic service restart with verification and notification",
+        "activities_sequence": [
+          "Get Service Status",
+          "Stop Service",
+          "Start Service",
+          "Wait for Service",
+          "Send Email"
+        ],
+        "use_case": "Automated service recovery procedures",
+        "complexity": "moderate",
+        "estimated_duration": "1-3 minutes"
+      },
+      {
+        "workflow_name": "User Account Provisioning",
+        "description": "Complete user onboarding with directory and system setup",
+        "activities_sequence": [
+          "AD Copy User",
+          "AD Set Property",
+          "AD Add User to Group",
+          "Create Directory",
+          "Send Email"
+        ],
+        "use_case": "Employee onboarding automation",
+        "complexity": "complex",
+        "estimated_duration": "5-10 minutes"
+      },
+      {
+        "workflow_name": "System Maintenance",
+        "description": "Coordinated system maintenance with service management",
+        "activities_sequence": [
+          "List Services",
+          "Stop Service",
+          "Kill Process",
+          "Start Service",
+          "Get Process Performance"
+        ],
+        "use_case": "Scheduled system maintenance procedures",
+        "complexity": "complex",
+        "estimated_duration": "10-30 minutes"
+      }
+    ],
+    "activity_dependencies": {
+      "prerequisite_relationships": [
+        {
+          "activity": "AD Copy User",
+          "prerequisites": ["AD Get Property", "AD List OU"],
+          "reason": "Need to verify source user and target organizational unit"
+        },
+        {
+          "activity": "Start Service",
+          "prerequisites": ["Get Service Status", "Get Service Dependencies"],
+          "reason": "Should check current status and dependencies before starting"
+        },
+        {
+          "activity": "Kill Process",
+          "prerequisites": ["Get Process", "Stop Process"],
+          "reason": "Try graceful stop before force termination"
+        }
+      ],
+      "logical_sequences": [
+        {
+          "sequence_name": "Service Restart Pattern",
+          "activities": [
+            "Get Service Status",
+            "Stop Service",
+            "Start Service",
+            "Wait for Service"
+          ],
+          "description": "Standard sequence for safe service restart operations"
+        },
+        {
+          "sequence_name": "Network Diagnostics",
+          "activities": ["Ping", "Check Port", "DNS Lookup", "Traceroute"],
+          "description": "Progressive network troubleshooting sequence"
+        }
+      ]
+    }
+  },
+  "integration_patterns": {
+    "module_requirements": {
+      "active_directory_integration": {
+        "required_modules": ["Active Directory Module"],
+        "configuration_steps": [
+          "Configure domain controller connection",
+          "Set up service account credentials",
+          "Test LDAP connectivity",
+          "Verify organizational unit access"
+        ],
+        "security_considerations": [
+          "Use dedicated service account with minimal privileges",
+          "Enable secure LDAP (LDAPS) when possible",
+          "Implement credential rotation policies",
+          "Monitor AD activity logs"
+        ]
+      },
+      "system_management_integration": {
+        "required_modules": [
+          "Services Module",
+          "Processes Module",
+          "Windows Module"
+        ],
+        "authentication_methods": [
+          "Windows Authentication",
+          "Local Account",
+          "Domain Account"
+        ],
+        "connectivity_requirements": [
+          "WMI access for Windows systems",
+          "SSH access for Linux systems",
+          "Administrative privileges",
+          "Network connectivity on required ports"
+        ]
+      }
+    },
+    "error_handling_strategies": {
+      "network_failures": {
+        "retry_patterns": ["exponential_backoff", "circuit_breaker"],
+        "fallback_procedures": ["alternative_hosts", "cached_responses"],
+        "escalation_triggers": ["consecutive_failures", "timeout_exceeded"]
+      },
+      "authentication_failures": {
+        "validation_steps": ["credential_verification", "permission_check"],
+        "recovery_actions": ["credential_refresh", "fallback_authentication"],
+        "security_measures": ["account_lockout_prevention", "audit_logging"]
+      },
+      "service_failures": {
+        "dependency_handling": ["check_prerequisites", "dependency_resolution"],
+        "recovery_strategies": ["automatic_restart", "alternative_services"],
+        "monitoring_integration": ["health_checks", "performance_monitoring"]
+      }
+    }
+  },
+  "usage_analytics": {
+    "popularity_ranking": [
+      "Ping",
+      "Get Service Status",
+      "Start Service",
+      "Stop Service",
+      "AD Get Property",
+      "Get Process List",
+      "AD List Group",
+      "Restart Service"
+    ],
+    "complexity_distribution": {
+      "simple": 24,
+      "moderate": 11,
+      "complex": 3
+    },
+    "category_usage_frequency": {
+      "network": "very_high",
+      "services": "high",
+      "processes": "high",
+      "active_directory": "moderate",
+      "windows": "moderate"
+    },
+    "common_combinations": [
+      ["Ping", "Get Service Status"],
+      ["Stop Service", "Start Service"],
+      ["AD Get Property", "AD Set Property"],
+      ["Get Process List", "Kill Process"]
+    ]
+  },
+  "best_practices": {
+    "workflow_design": [
+      "Always check current state before making changes",
+      "Implement proper error handling and rollback procedures",
+      "Use parallel execution for independent operations",
+      "Include verification steps after critical operations",
+      "Log all significant activities for audit trails"
+    ],
+    "security_guidelines": [
+      "Use service accounts with minimal required privileges",
+      "Implement credential management and rotation",
+      "Enable audit logging for all administrative activities",
+      "Validate inputs to prevent injection attacks",
+      "Use secure communication protocols (LDAPS, HTTPS)"
+    ],
+    "performance_optimization": [
+      "Use connection pooling for frequent operations",
+      "Implement caching for repeated queries",
+      "Set appropriate timeouts for network operations",
+      "Monitor resource usage and adjust concurrency",
+      "Use bulk operations when available"
+    ]
+  }
+}

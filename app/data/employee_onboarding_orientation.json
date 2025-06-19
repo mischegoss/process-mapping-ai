@@ -1,0 +1,454 @@
+{
+  "workflow_metadata": {
+    "id": "employee_onboarding_automation",
+    "name": "Employee Onboarding Automation",
+    "description": "Comprehensive workflow to automate new employee account creation and setup across multiple systems",
+    "complexity": "moderate",
+    "category": "identity_management",
+    "estimated_duration": "5-10 minutes",
+    "business_value": "Reduces onboarding time from hours to minutes, ensures consistent setup, eliminates manual errors",
+    "use_cases": [
+      "New employee onboarding",
+      "Contractor account creation",
+      "Temporary access provisioning",
+      "Role-based account setup"
+    ],
+    "tags": [
+      "active_directory",
+      "user_provisioning",
+      "automation",
+      "onboarding",
+      "parallel_processing"
+    ],
+    "resolve_reference": "https://docs.resolve.io/express/Repository/Recipients/ad-user-synchronization/",
+    "demo_scenario": "High business value demo showing ROI and enterprise applicability",
+    "demo_duration": "5 minutes"
+  },
+  "workflow_definition": {
+    "input_parameters": {
+      "employee_details": {
+        "first_name": {
+          "type": "string",
+          "required": true,
+          "example": "John"
+        },
+        "last_name": {
+          "type": "string",
+          "required": true,
+          "example": "Smith"
+        },
+        "email": {
+          "type": "string",
+          "required": true,
+          "example": "john.smith@company.com"
+        },
+        "department": {
+          "type": "string",
+          "required": true,
+          "example": "Engineering"
+        },
+        "job_title": {
+          "type": "string",
+          "required": true,
+          "example": "Software Developer"
+        },
+        "manager_email": {
+          "type": "string",
+          "required": true,
+          "example": "manager@company.com"
+        },
+        "start_date": {
+          "type": "date",
+          "required": true,
+          "example": "2025-07-01"
+        }
+      },
+      "access_requirements": {
+        "security_groups": {
+          "type": "array",
+          "required": true,
+          "example": ["Engineers", "OfficeAccess", "VPNUsers"]
+        },
+        "applications": {
+          "type": "array",
+          "required": false,
+          "example": ["Jira", "Confluence", "GitHub"]
+        },
+        "special_permissions": {
+          "type": "array",
+          "required": false,
+          "example": ["DatabaseAccess", "AdminRights"]
+        }
+      }
+    },
+    "global_variables": {
+      "username": {
+        "type": "string",
+        "description": "Generated username for new employee"
+      },
+      "temp_password": {
+        "type": "string",
+        "description": "Temporary password for initial login"
+      },
+      "account_created": {
+        "type": "boolean",
+        "description": "Whether AD account creation succeeded"
+      },
+      "groups_assigned": {
+        "type": "boolean",
+        "description": "Whether group assignments completed"
+      },
+      "notifications_sent": {
+        "type": "boolean",
+        "description": "Whether notification emails were sent"
+      }
+    },
+    "activities": [
+      {
+        "step": 1,
+        "activity_id": "generate_username",
+        "activity_type": "Generate Username",
+        "activity_name": "Create Username",
+        "category": "Utility",
+        "description": "Generate unique username based on first/last name",
+        "settings": {
+          "first_name": "%employee_details.first_name%",
+          "last_name": "%employee_details.last_name%",
+          "format": "first_initial_lastname",
+          "check_existing": true,
+          "domain": "company.local"
+        },
+        "output_variables": {
+          "generated_username": "%generate_username.Username%",
+          "is_unique": "%generate_username.IsUnique%"
+        }
+      },
+      {
+        "step": 2,
+        "activity_id": "generate_password",
+        "activity_type": "Generate Password",
+        "activity_name": "Create Temporary Password",
+        "category": "Security",
+        "description": "Generate secure temporary password meeting company policy",
+        "settings": {
+          "length": 12,
+          "include_uppercase": true,
+          "include_lowercase": true,
+          "include_numbers": true,
+          "include_symbols": true,
+          "complexity_required": true
+        },
+        "output_variables": {
+          "temp_password": "%generate_password.Password%"
+        }
+      },
+      {
+        "step": 3,
+        "activity_id": "create_ad_user",
+        "activity_type": "AD Create User",
+        "activity_name": "Create Active Directory Account",
+        "category": "Active Directory",
+        "description": "Create new user account in Active Directory",
+        "settings": {
+          "username": "%generate_username.Username%",
+          "password": "%generate_password.Password%",
+          "first_name": "%employee_details.first_name%",
+          "last_name": "%employee_details.last_name%",
+          "full_name": "%employee_details.first_name% %employee_details.last_name%",
+          "email": "%employee_details.email%",
+          "organizational_unit": "OU=Users,OU=%employee_details.department%,DC=company,DC=local",
+          "description": "%employee_details.job_title% - %employee_details.department%",
+          "must_change_password": true,
+          "account_enabled": true
+        },
+        "output_variables": {
+          "account_created": "%create_ad_user.Result%",
+          "user_dn": "%create_ad_user.DistinguishedName%"
+        },
+        "error_handling": {
+          "on_failure": "Stop workflow and alert administrators",
+          "retry_count": 3,
+          "retry_interval": 5
+        }
+      },
+      {
+        "step": 4,
+        "activity_id": "parallel_setup",
+        "activity_type": "Parallel Control",
+        "activity_name": "Concurrent Account Setup",
+        "category": "Logic",
+        "description": "Execute multiple setup tasks simultaneously to save time",
+        "branches": [
+          {
+            "branch_id": "group_assignment",
+            "name": "Assign Security Groups",
+            "activities": ["assign_groups", "set_permissions"]
+          },
+          {
+            "branch_id": "profile_setup",
+            "name": "Configure User Profile",
+            "activities": ["set_properties", "create_home_directory"]
+          },
+          {
+            "branch_id": "notification_prep",
+            "name": "Prepare Notifications",
+            "activities": [
+              "create_welcome_email",
+              "prepare_manager_notification"
+            ]
+          }
+        ]
+      },
+      {
+        "step": 5,
+        "activity_id": "assign_groups",
+        "activity_type": "AD Add User to Groups",
+        "activity_name": "Assign Security Groups",
+        "category": "Active Directory",
+        "parent_branch": "group_assignment",
+        "description": "Add user to required security groups",
+        "settings": {
+          "username": "%generate_username.Username%",
+          "groups": "%access_requirements.security_groups%",
+          "verify_membership": true
+        },
+        "output_variables": {
+          "groups_assigned": "%assign_groups.GroupsAdded%",
+          "assignment_count": "%assign_groups.SuccessCount%"
+        }
+      },
+      {
+        "step": 6,
+        "activity_id": "set_properties",
+        "activity_type": "AD Set User Properties",
+        "activity_name": "Configure User Properties",
+        "category": "Active Directory",
+        "parent_branch": "profile_setup",
+        "description": "Set additional user properties and attributes",
+        "settings": {
+          "username": "%generate_username.Username%",
+          "properties": {
+            "department": "%employee_details.department%",
+            "title": "%employee_details.job_title%",
+            "manager": "%employee_details.manager_email%",
+            "office": "Main Office",
+            "telephone": "TBD",
+            "employee_id": "%generate_username.Username%",
+            "start_date": "%employee_details.start_date%"
+          }
+        },
+        "output_variables": {
+          "properties_set": "%set_properties.Result%"
+        }
+      },
+      {
+        "step": 7,
+        "activity_id": "create_home_directory",
+        "activity_type": "Create Directory",
+        "activity_name": "Create Home Directory",
+        "category": "File Management",
+        "parent_branch": "profile_setup",
+        "description": "Create user's home directory with proper permissions",
+        "settings": {
+          "path": "\\\\fileserver\\users\\%generate_username.Username%",
+          "permissions": [
+            {
+              "user": "%generate_username.Username%",
+              "rights": "FullControl"
+            },
+            {
+              "group": "Domain Admins",
+              "rights": "FullControl"
+            }
+          ],
+          "create_subfolders": ["Documents", "Desktop", "Downloads"]
+        },
+        "output_variables": {
+          "directory_created": "%create_home_directory.Result%",
+          "directory_path": "%create_home_directory.Path%"
+        }
+      },
+      {
+        "step": 8,
+        "activity_id": "validation_check",
+        "activity_type": "If/Else Control",
+        "activity_name": "Validate Account Setup",
+        "category": "Logic",
+        "description": "Verify all setup tasks completed successfully",
+        "condition": {
+          "type": "User Defined",
+          "expression": "%create_ad_user.Result% == 'Success' AND %assign_groups.Result% == 'Success' AND %set_properties.Result% == 'Success'"
+        },
+        "branches": [
+          {
+            "branch_id": "success_path",
+            "condition": "All setup tasks successful",
+            "next_activities": [
+              "send_welcome_email",
+              "notify_manager",
+              "create_ticket"
+            ]
+          },
+          {
+            "branch_id": "failure_path",
+            "condition": "One or more setup tasks failed",
+            "next_activities": [
+              "send_error_notification",
+              "cleanup_partial_setup"
+            ]
+          }
+        ]
+      },
+      {
+        "step": 9,
+        "activity_id": "send_welcome_email",
+        "activity_type": "Send Email",
+        "activity_name": "Send Welcome Email to Employee",
+        "category": "Communication",
+        "branch": "success_path",
+        "description": "Send welcome email with account details to new employee",
+        "settings": {
+          "recipients": ["%employee_details.email%"],
+          "cc": ["%employee_details.manager_email%"],
+          "subject": "Welcome to Company! Your Account Details",
+          "message_type": "Template",
+          "template": "NewEmployeeWelcome",
+          "body": {
+            "template": "Welcome %employee_details.first_name%!\n\nYour account has been created successfully:\n\nUsername: %generate_username.Username%\nTemporary Password: %generate_password.Password%\nEmail: %employee_details.email%\n\nPlease log in and change your password on your first day.\n\nYour manager %employee_details.manager_email% has been notified.\n\nWelcome to the team!\n\nIT Support Team",
+            "format": "text"
+          },
+          "priority": "Normal",
+          "attachments": ["EmployeeHandbook.pdf", "ITPolicies.pdf"]
+        },
+        "output_variables": {
+          "welcome_sent": "%send_welcome_email.Result%"
+        }
+      },
+      {
+        "step": 10,
+        "activity_id": "notify_manager",
+        "activity_type": "Send Email",
+        "activity_name": "Notify Manager",
+        "category": "Communication",
+        "branch": "success_path",
+        "description": "Inform manager that new employee account is ready",
+        "settings": {
+          "recipients": ["%employee_details.manager_email%"],
+          "subject": "New Employee Account Ready: %employee_details.first_name% %employee_details.last_name%",
+          "body": {
+            "template": "Hi,\n\nThe account for your new team member has been set up:\n\nEmployee: %employee_details.first_name% %employee_details.last_name%\nDepartment: %employee_details.department%\nTitle: %employee_details.job_title%\nUsername: %generate_username.Username%\nStart Date: %employee_details.start_date%\n\nSecurity Groups: %access_requirements.security_groups%\nHome Directory: %create_home_directory.Path%\n\nThe employee has been sent login details.\n\nIT Support Team",
+            "format": "text"
+          }
+        },
+        "output_variables": {
+          "manager_notified": "%notify_manager.Result%"
+        }
+      },
+      {
+        "step": 11,
+        "activity_id": "create_ticket",
+        "activity_type": "Create Ticket",
+        "activity_name": "Create IT Tracking Ticket",
+        "category": "ITSM",
+        "branch": "success_path",
+        "description": "Create ticket to track onboarding completion",
+        "settings": {
+          "title": "Employee Onboarding Complete: %employee_details.first_name% %employee_details.last_name%",
+          "description": "Automated onboarding completed for new employee",
+          "category": "User Account Management",
+          "priority": "Low",
+          "assigned_to": "IT Support",
+          "custom_fields": {
+            "employee_name": "%employee_details.first_name% %employee_details.last_name%",
+            "username": "%generate_username.Username%",
+            "department": "%employee_details.department%",
+            "manager": "%employee_details.manager_email%"
+          }
+        },
+        "output_variables": {
+          "ticket_created": "%create_ticket.TicketNumber%"
+        }
+      }
+    ],
+    "workflow_flow": {
+      "start": "generate_username",
+      "sequence": [
+        "generate_username → generate_password",
+        "generate_password → create_ad_user",
+        "create_ad_user → parallel_setup",
+        "parallel_setup completes → validation_check",
+        "validation_check (success) → [send_welcome_email, notify_manager, create_ticket]"
+      ]
+    },
+    "error_handling": {
+      "global_timeout": 900,
+      "critical_failure_points": ["create_ad_user"],
+      "rollback_procedures": {
+        "if_ad_creation_fails": "No cleanup needed",
+        "if_group_assignment_fails": "Remove user from successfully assigned groups",
+        "if_directory_creation_fails": "Continue workflow, manual directory creation required"
+      }
+    }
+  },
+  "execution_requirements": {
+    "modules": [
+      {
+        "name": "Active Directory Module",
+        "required": true,
+        "purpose": "User and group management"
+      },
+      {
+        "name": "Email Module",
+        "required": true,
+        "purpose": "Send notifications"
+      },
+      {
+        "name": "File Management Module",
+        "required": true,
+        "purpose": "Create home directories"
+      },
+      {
+        "name": "ITSM Module",
+        "required": false,
+        "purpose": "Create tracking tickets"
+      }
+    ],
+    "permissions": [
+      "Active Directory user creation rights",
+      "Group membership management rights",
+      "File server access for home directory creation",
+      "Email sending permissions"
+    ]
+  },
+  "demo_configuration": {
+    "sample_inputs": {
+      "employee_details": {
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "email": "jane.doe@company.com",
+        "department": "Marketing",
+        "job_title": "Marketing Specialist",
+        "manager_email": "marketing.manager@company.com",
+        "start_date": "2025-07-15"
+      },
+      "access_requirements": {
+        "security_groups": ["MarketingTeam", "OfficeAccess", "EmailUsers"],
+        "applications": ["Salesforce", "HubSpot", "Slack"]
+      }
+    },
+    "demo_talking_points": [
+      "Shows real business value - saves hours of manual work",
+      "Demonstrates parallel processing for efficiency",
+      "Includes error handling and rollback procedures",
+      "Multi-system integration (AD, email, file systems)",
+      "Scalable pattern for any user provisioning scenario"
+    ]
+  },
+  "validation_data": {
+    "resolve_workflow_equivalent": {
+      "description": "Based on Active Directory user synchronization templates and workflows from Resolve documentation",
+      "source_url": "https://docs.resolve.io/express/Repository/Recipients/ad-user-synchronization/",
+      "complexity_justification": "Moderate complexity with parallel processing, multiple integrations, and comprehensive error handling"
+    }
+  }
+}

@@ -1,0 +1,732 @@
+{
+  "workflow_metadata": {
+    "id": "automated_report_generation",
+    "name": "Automated Report Generation & Distribution",
+    "description": "End-to-end automated report generation with data collection, analysis, formatting, and distribution across multiple channels",
+    "complexity": "moderate-complex",
+    "category": "business_intelligence",
+    "estimated_duration": "20-60 minutes (depends on data volume)",
+    "business_value": "Eliminates manual reporting effort, ensures consistent delivery, provides real-time insights, reduces human error",
+    "use_cases": [
+      "Weekly executive dashboard reports",
+      "Monthly compliance reporting",
+      "Daily operational metrics",
+      "Quarterly business reviews",
+      "Ad-hoc analytical reports"
+    ],
+    "tags": [
+      "reporting",
+      "data_processing",
+      "business_intelligence",
+      "automation",
+      "distribution",
+      "analytics"
+    ],
+    "resolve_reference": "https://docs.resolve.io/express/Builder/Workflow%20Designer/building-your-workflow/",
+    "demo_scenario": "End-to-end business process showing cross-functional workflow generation",
+    "demo_duration": "4-5 minutes"
+  },
+  "workflow_definition": {
+    "input_parameters": {
+      "report_configuration": {
+        "report_name": {
+          "type": "string",
+          "required": true,
+          "description": "Name of the report to generate",
+          "example": "Weekly Operations Dashboard"
+        },
+        "report_type": {
+          "type": "string",
+          "required": true,
+          "options": [
+            "executive_summary",
+            "operational_metrics",
+            "compliance_report",
+            "financial_summary",
+            "custom"
+          ],
+          "description": "Type of report to generate"
+        },
+        "reporting_period": {
+          "start_date": {
+            "type": "date",
+            "required": true,
+            "example": "2025-06-01"
+          },
+          "end_date": {
+            "type": "date",
+            "required": true,
+            "example": "2025-06-07"
+          }
+        },
+        "data_sources": {
+          "type": "array",
+          "required": true,
+          "description": "List of data sources to include",
+          "example": [
+            "sales_db",
+            "crm_system",
+            "financial_db",
+            "support_tickets"
+          ]
+        }
+      },
+      "distribution_settings": {
+        "delivery_method": {
+          "type": "array",
+          "required": true,
+          "options": ["email", "sharepoint", "teams", "ftp", "api"],
+          "description": "How to distribute the report"
+        },
+        "recipients": {
+          "executives": {
+            "type": "array",
+            "required": false,
+            "example": ["ceo@company.com", "cfo@company.com"]
+          },
+          "managers": {
+            "type": "array",
+            "required": false,
+            "example": ["ops-manager@company.com", "sales-manager@company.com"]
+          },
+          "teams": {
+            "type": "array",
+            "required": false,
+            "example": ["operations-team@company.com"]
+          }
+        },
+        "format_preferences": {
+          "type": "array",
+          "required": false,
+          "default": ["pdf"],
+          "options": ["pdf", "excel", "powerpoint", "html"],
+          "description": "Output formats to generate"
+        }
+      },
+      "customization": {
+        "include_charts": {
+          "type": "boolean",
+          "required": false,
+          "default": true
+        },
+        "include_raw_data": {
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        "branding": {
+          "type": "string",
+          "required": false,
+          "default": "corporate_template"
+        }
+      }
+    },
+    "global_variables": {
+      "report_generation_time": {
+        "type": "datetime",
+        "description": "When report generation started"
+      },
+      "total_records_processed": {
+        "type": "integer",
+        "description": "Total number of data records processed"
+      },
+      "generated_files": {
+        "type": "array",
+        "description": "List of generated report files"
+      },
+      "distribution_status": {
+        "type": "object",
+        "description": "Status of distribution to each channel"
+      },
+      "data_quality_score": {
+        "type": "float",
+        "description": "Overall data quality assessment"
+      }
+    },
+    "activities": [
+      {
+        "step": 1,
+        "activity_id": "validate_parameters",
+        "activity_type": "Validate Input",
+        "activity_name": "Validate Report Parameters",
+        "category": "Validation",
+        "description": "Validate input parameters and check data source availability",
+        "settings": {
+          "validations": [
+            {
+              "field": "reporting_period.start_date",
+              "rule": "not_future_date",
+              "message": "Start date cannot be in the future"
+            },
+            {
+              "field": "reporting_period.end_date",
+              "rule": "after_start_date",
+              "message": "End date must be after start date"
+            },
+            {
+              "field": "data_sources",
+              "rule": "sources_available",
+              "message": "All specified data sources must be accessible"
+            }
+          ],
+          "check_data_source_connectivity": true,
+          "verify_recipient_emails": true
+        },
+        "output_variables": {
+          "validation_passed": "%validate_parameters.IsValid%",
+          "validation_errors": "%validate_parameters.Errors%",
+          "available_sources": "%validate_parameters.AvailableSources%"
+        },
+        "error_handling": {
+          "on_validation_failure": "Stop workflow and notify administrators",
+          "critical_activity": true
+        }
+      },
+      {
+        "step": 2,
+        "activity_id": "initialize_report_session",
+        "activity_type": "Set Variables",
+        "activity_name": "Initialize Report Generation Session",
+        "category": "Utility",
+        "description": "Set up report generation session and create working directory",
+        "settings": {
+          "variables": {
+            "report_generation_time": "%CurrentDateTime%",
+            "report_session_id": "%GenerateGUID%",
+            "working_directory": "\\\\reports\\temp\\%report_session_id%",
+            "report_filename_base": "%report_configuration.report_name%_%FormatDateTime(CurrentDateTime, 'yyyyMMdd_HHmmss')%"
+          },
+          "create_working_directory": true,
+          "set_permissions": {
+            "report_service_account": "FullControl",
+            "report_users_group": "ReadOnly"
+          }
+        }
+      },
+      {
+        "step": 3,
+        "activity_id": "parallel_data_collection",
+        "activity_type": "Parallel Control",
+        "activity_name": "Collect Data from Multiple Sources",
+        "category": "Logic",
+        "description": "Collect data from multiple sources simultaneously for efficiency",
+        "branches": [
+          {
+            "branch_id": "sales_data_collection",
+            "name": "Sales Data Collection",
+            "condition": "%Contains(data_sources, 'sales_db')%",
+            "activities": ["extract_sales_data", "validate_sales_data"]
+          },
+          {
+            "branch_id": "operational_data_collection",
+            "name": "Operational Data Collection",
+            "condition": "%Contains(data_sources, 'operational_metrics')%",
+            "activities": ["extract_operational_data", "calculate_kpis"]
+          },
+          {
+            "branch_id": "financial_data_collection",
+            "name": "Financial Data Collection",
+            "condition": "%Contains(data_sources, 'financial_db')%",
+            "activities": ["extract_financial_data", "validate_financial_data"]
+          },
+          {
+            "branch_id": "customer_data_collection",
+            "name": "Customer Data Collection",
+            "condition": "%Contains(data_sources, 'crm_system')%",
+            "activities": ["extract_customer_data", "analyze_customer_metrics"]
+          }
+        ]
+      },
+      {
+        "step": 4,
+        "activity_id": "extract_sales_data",
+        "activity_type": "Database Query",
+        "activity_name": "Extract Sales Data",
+        "category": "Data",
+        "parent_branch": "sales_data_collection",
+        "description": "Extract sales data for the reporting period",
+        "settings": {
+          "connection": "sales_database",
+          "query": {
+            "sql": "SELECT sales_date, product_id, product_name, quantity, unit_price, total_amount, sales_rep, region FROM sales_transactions WHERE sales_date BETWEEN @start_date AND @end_date ORDER BY sales_date",
+            "parameters": {
+              "start_date": "%reporting_period.start_date%",
+              "end_date": "%reporting_period.end_date%"
+            }
+          },
+          "output_format": "dataset",
+          "timeout_seconds": 300
+        },
+        "output_variables": {
+          "sales_data": "%extract_sales_data.ResultSet%",
+          "sales_record_count": "%extract_sales_data.RecordCount%",
+          "sales_total_amount": "%extract_sales_data.SumTotalAmount%"
+        }
+      },
+      {
+        "step": 5,
+        "activity_id": "extract_operational_data",
+        "activity_type": "API Call",
+        "activity_name": "Extract Operational Metrics",
+        "category": "Data",
+        "parent_branch": "operational_data_collection",
+        "description": "Extract operational metrics from monitoring systems",
+        "settings": {
+          "api_endpoint": "https://monitoring.company.com/api/v1/metrics",
+          "method": "GET",
+          "authentication": "bearer_token",
+          "parameters": {
+            "start_time": "%FormatDateTime(reporting_period.start_date, 'yyyy-MM-ddT00:00:00Z')%",
+            "end_time": "%FormatDateTime(reporting_period.end_date, 'yyyy-MM-ddT23:59:59Z')%",
+            "metrics": [
+              "system_uptime",
+              "response_time",
+              "error_rate",
+              "throughput"
+            ]
+          },
+          "headers": {
+            "Authorization": "Bearer %GetSystemVariable('MONITORING_API_TOKEN')%",
+            "Content-Type": "application/json"
+          }
+        },
+        "output_variables": {
+          "operational_metrics": "%extract_operational_data.ResponseData%",
+          "api_call_successful": "%extract_operational_data.Success%"
+        }
+      },
+      {
+        "step": 6,
+        "activity_id": "data_quality_assessment",
+        "activity_type": "Data Quality Check",
+        "activity_name": "Assess Data Quality",
+        "category": "Data Quality",
+        "description": "Evaluate quality and completeness of collected data",
+        "settings": {
+          "data_sources_to_check": [
+            {
+              "source": "sales_data",
+              "required_fields": ["sales_date", "total_amount"],
+              "quality_checks": ["completeness", "validity", "consistency"]
+            },
+            {
+              "source": "operational_metrics",
+              "required_fields": ["timestamp", "metric_value"],
+              "quality_checks": ["completeness", "outlier_detection"]
+            }
+          ],
+          "quality_thresholds": {
+            "completeness_minimum": 0.95,
+            "validity_minimum": 0.98,
+            "consistency_minimum": 0.9
+          },
+          "generate_quality_report": true
+        },
+        "output_variables": {
+          "data_quality_score": "%data_quality_assessment.OverallScore%",
+          "quality_issues": "%data_quality_assessment.Issues%",
+          "quality_passed": "%data_quality_assessment.PassedThreshold%"
+        }
+      },
+      {
+        "step": 7,
+        "activity_id": "data_quality_decision",
+        "activity_type": "If/Else Control",
+        "activity_name": "Evaluate Data Quality",
+        "category": "Logic",
+        "description": "Decide whether to proceed based on data quality assessment",
+        "branches": [
+          {
+            "branch_id": "quality_acceptable",
+            "condition": {
+              "type": "User Defined",
+              "expression": "%data_quality_assessment.OverallScore% >= 0.85"
+            },
+            "description": "Data quality is acceptable for reporting",
+            "next_activities": ["generate_report_content"]
+          },
+          {
+            "branch_id": "quality_warning",
+            "condition": {
+              "type": "User Defined",
+              "expression": "%data_quality_assessment.OverallScore% >= 0.70 AND %data_quality_assessment.OverallScore% < 0.85"
+            },
+            "description": "Data quality has issues but proceeding with warnings",
+            "next_activities": [
+              "add_data_quality_warning",
+              "generate_report_content"
+            ]
+          },
+          {
+            "branch_id": "quality_unacceptable",
+            "condition": {
+              "type": "Default"
+            },
+            "description": "Data quality too poor for reliable reporting",
+            "next_activities": [
+              "send_data_quality_alert",
+              "stop_report_generation"
+            ]
+          }
+        ]
+      },
+      {
+        "step": 8,
+        "activity_id": "generate_report_content",
+        "activity_type": "Generate Report",
+        "activity_name": "Generate Report Content",
+        "category": "Reporting",
+        "branch": "quality_acceptable",
+        "description": "Generate formatted report content with charts and analysis",
+        "settings": {
+          "report_template": "%report_configuration.report_type%",
+          "data_inputs": {
+            "sales_data": "%extract_sales_data.ResultSet%",
+            "operational_metrics": "%extract_operational_data.ResponseData%",
+            "reporting_period": "%reporting_period%"
+          },
+          "content_sections": [
+            {
+              "section": "executive_summary",
+              "include": true,
+              "auto_generate_insights": true
+            },
+            {
+              "section": "key_metrics",
+              "include": true,
+              "visualization_type": "dashboard_cards"
+            },
+            {
+              "section": "trend_analysis",
+              "include": "%customization.include_charts%",
+              "chart_types": ["line_chart", "bar_chart", "pie_chart"]
+            },
+            {
+              "section": "detailed_data",
+              "include": "%customization.include_raw_data%",
+              "format": "table"
+            }
+          ],
+          "formatting": {
+            "branding_template": "%customization.branding%",
+            "color_scheme": "corporate",
+            "include_logo": true,
+            "page_numbering": true
+          }
+        },
+        "output_variables": {
+          "report_content": "%generate_report_content.Content%",
+          "content_generation_successful": "%generate_report_content.Success%",
+          "page_count": "%generate_report_content.PageCount%"
+        },
+        "timeout_setting": 1800
+      },
+      {
+        "step": 9,
+        "activity_id": "export_multiple_formats",
+        "activity_type": "Export Report",
+        "activity_name": "Export to Multiple Formats",
+        "category": "File Generation",
+        "description": "Export report to requested formats",
+        "settings": {
+          "input_content": "%generate_report_content.Content%",
+          "export_formats": "%distribution_settings.format_preferences%",
+          "output_directory": "%working_directory%",
+          "filename_base": "%report_filename_base%",
+          "format_settings": {
+            "pdf": {
+              "quality": "high",
+              "security": {
+                "password_protect": false,
+                "allow_printing": true,
+                "allow_copying": true
+              }
+            },
+            "excel": {
+              "include_charts": true,
+              "separate_sheets": true,
+              "auto_fit_columns": true
+            },
+            "powerpoint": {
+              "slide_template": "corporate",
+              "include_speaker_notes": true
+            }
+          }
+        },
+        "output_variables": {
+          "generated_files": "%export_multiple_formats.OutputFiles%",
+          "file_sizes": "%export_multiple_formats.FileSizes%",
+          "export_successful": "%export_multiple_formats.Success%"
+        }
+      },
+      {
+        "step": 10,
+        "activity_id": "distribute_reports",
+        "activity_type": "Parallel Control",
+        "activity_name": "Distribute Reports via Multiple Channels",
+        "category": "Logic",
+        "description": "Distribute reports via multiple delivery methods simultaneously",
+        "branches": [
+          {
+            "branch_id": "email_distribution",
+            "name": "Email Distribution",
+            "condition": "%Contains(distribution_settings.delivery_method, 'email')%",
+            "activities": ["send_email_reports"]
+          },
+          {
+            "branch_id": "sharepoint_upload",
+            "name": "SharePoint Upload",
+            "condition": "%Contains(distribution_settings.delivery_method, 'sharepoint')%",
+            "activities": ["upload_to_sharepoint"]
+          },
+          {
+            "branch_id": "teams_notification",
+            "name": "Teams Notification",
+            "condition": "%Contains(distribution_settings.delivery_method, 'teams')%",
+            "activities": ["post_to_teams"]
+          },
+          {
+            "branch_id": "ftp_upload",
+            "name": "FTP Upload",
+            "condition": "%Contains(distribution_settings.delivery_method, 'ftp')%",
+            "activities": ["upload_via_ftp"]
+          }
+        ]
+      },
+      {
+        "step": 11,
+        "activity_id": "send_email_reports",
+        "activity_type": "Send Email with Attachments",
+        "activity_name": "Email Report Distribution",
+        "category": "Communication",
+        "parent_branch": "email_distribution",
+        "description": "Send reports via email to specified recipients",
+        "settings": {
+          "recipient_groups": {
+            "executives": {
+              "recipients": "%distribution_settings.recipients.executives%",
+              "attachments": ["%GetFileByExtension(generated_files, 'pdf')%"],
+              "subject": "Executive Report: %report_configuration.report_name% - %FormatDateTime(reporting_period.end_date, 'MMM dd, yyyy')%",
+              "body_template": "executive_email_template"
+            },
+            "managers": {
+              "recipients": "%distribution_settings.recipients.managers%",
+              "attachments": "%generated_files%",
+              "subject": "Management Report: %report_configuration.report_name% - %FormatDateTime(reporting_period.end_date, 'MMM dd, yyyy')%",
+              "body_template": "manager_email_template"
+            },
+            "teams": {
+              "recipients": "%distribution_settings.recipients.teams%",
+              "attachments": ["%GetFileByExtension(generated_files, 'excel')%"],
+              "subject": "Team Report: %report_configuration.report_name% - %FormatDateTime(reporting_period.end_date, 'MMM dd, yyyy')%",
+              "body_template": "team_email_template"
+            }
+          },
+          "email_body_content": {
+            "include_summary": true,
+            "include_key_metrics": true,
+            "include_data_quality_note": "%data_quality_score% < 0.90"
+          }
+        },
+        "output_variables": {
+          "emails_sent": "%send_email_reports.EmailsSent%",
+          "email_delivery_status": "%send_email_reports.DeliveryStatus%"
+        }
+      },
+      {
+        "step": 12,
+        "activity_id": "upload_to_sharepoint",
+        "activity_type": "SharePoint Upload",
+        "activity_name": "Upload to SharePoint Library",
+        "category": "File Management",
+        "parent_branch": "sharepoint_upload",
+        "description": "Upload reports to SharePoint document library",
+        "settings": {
+          "sharepoint_site": "https://company.sharepoint.com/sites/reports",
+          "document_library": "Automated Reports",
+          "folder_structure": "%report_configuration.report_type%/%FormatDateTime(reporting_period.end_date, 'yyyy/MM')%",
+          "files_to_upload": "%generated_files%",
+          "metadata": {
+            "report_name": "%report_configuration.report_name%",
+            "report_type": "%report_configuration.report_type%",
+            "reporting_period_start": "%reporting_period.start_date%",
+            "reporting_period_end": "%reporting_period.end_date%",
+            "data_quality_score": "%data_quality_score%",
+            "generated_by": "Automated Reporting System"
+          },
+          "permissions": {
+            "executives_group": "FullControl",
+            "managers_group": "Read",
+            "reports_team": "Contribute"
+          }
+        },
+        "output_variables": {
+          "sharepoint_urls": "%upload_to_sharepoint.FileURLs%",
+          "upload_successful": "%upload_to_sharepoint.Success%"
+        }
+      },
+      {
+        "step": 13,
+        "activity_id": "generate_distribution_summary",
+        "activity_type": "Create Summary Report",
+        "activity_name": "Generate Distribution Summary",
+        "category": "Reporting",
+        "description": "Create summary of report generation and distribution activities",
+        "settings": {
+          "summary_content": {
+            "report_metadata": {
+              "report_name": "%report_configuration.report_name%",
+              "generation_time": "%report_generation_time%",
+              "completion_time": "%CurrentDateTime%",
+              "processing_duration": "%DateDiff(report_generation_time, CurrentDateTime, 'minutes')%"
+            },
+            "data_summary": {
+              "total_records_processed": "%sales_record_count% + %operational_record_count%",
+              "data_quality_score": "%data_quality_score%",
+              "data_sources_used": "%data_sources%"
+            },
+            "distribution_summary": {
+              "formats_generated": "%Length(generated_files)%",
+              "emails_sent": "%send_email_reports.EmailsSent%",
+              "sharepoint_uploads": "%upload_to_sharepoint.FileCount%",
+              "total_recipients": "%CountRecipients(distribution_settings.recipients)%"
+            }
+          },
+          "create_dashboard_entry": true,
+          "log_to_audit_trail": true
+        },
+        "output_variables": {
+          "summary_report": "%generate_distribution_summary.Summary%",
+          "audit_log_entry": "%generate_distribution_summary.AuditEntry%"
+        }
+      },
+      {
+        "step": 14,
+        "activity_id": "cleanup_temp_files",
+        "activity_type": "File Cleanup",
+        "activity_name": "Clean Up Temporary Files",
+        "category": "File Management",
+        "description": "Clean up temporary files and working directory",
+        "settings": {
+          "cleanup_actions": [
+            {
+              "action": "delete_working_directory",
+              "path": "%working_directory%",
+              "preserve_final_reports": true
+            },
+            {
+              "action": "archive_logs",
+              "retention_days": 90
+            }
+          ],
+          "verify_cleanup": true
+        },
+        "output_variables": {
+          "cleanup_successful": "%cleanup_temp_files.Success%",
+          "files_preserved": "%cleanup_temp_files.PreservedFiles%"
+        }
+      }
+    ],
+    "workflow_flow": {
+      "start": "validate_parameters",
+      "sequence": [
+        "validate_parameters → initialize_report_session",
+        "initialize_report_session → parallel_data_collection",
+        "parallel_data_collection completes → data_quality_assessment",
+        "data_quality_assessment → data_quality_decision",
+        "data_quality_decision (acceptable) → generate_report_content",
+        "generate_report_content → export_multiple_formats",
+        "export_multiple_formats → distribute_reports",
+        "distribute_reports completes → generate_distribution_summary",
+        "generate_distribution_summary → cleanup_temp_files"
+      ]
+    },
+    "error_handling": {
+      "global_timeout": 7200,
+      "retry_on_data_source_failures": 3,
+      "fallback_procedures": {
+        "data_source_unavailable": "Use cached data with warning",
+        "format_export_failure": "Proceed with available formats",
+        "distribution_failure": "Retry once, then alert administrators"
+      }
+    }
+  },
+  "execution_requirements": {
+    "modules": [
+      {
+        "name": "Database Connectivity Module",
+        "required": true,
+        "purpose": "Connect to various data sources"
+      },
+      {
+        "name": "Report Generation Module",
+        "required": true,
+        "purpose": "Generate formatted reports and charts"
+      },
+      {
+        "name": "File Management Module",
+        "required": true,
+        "purpose": "File operations and format conversions"
+      },
+      {
+        "name": "Email Module",
+        "required": true,
+        "purpose": "Email distribution with attachments"
+      },
+      {
+        "name": "SharePoint Integration Module",
+        "required": false,
+        "purpose": "Upload to SharePoint libraries"
+      },
+      {
+        "name": "Teams Integration Module",
+        "required": false,
+        "purpose": "Post notifications to Teams channels"
+      }
+    ],
+    "permissions": [
+      "Database read access to specified data sources",
+      "File system write access for report generation",
+      "Email sending permissions",
+      "SharePoint site access",
+      "Teams channel posting permissions"
+    ]
+  },
+  "demo_configuration": {
+    "sample_inputs": {
+      "report_configuration": {
+        "report_name": "Weekly Sales Performance",
+        "report_type": "executive_summary",
+        "reporting_period": {
+          "start_date": "2025-06-01",
+          "end_date": "2025-06-07"
+        },
+        "data_sources": ["sales_db", "crm_system"]
+      },
+      "distribution_settings": {
+        "delivery_method": ["email", "sharepoint"],
+        "recipients": {
+          "executives": ["ceo@company.com"],
+          "managers": ["sales-manager@company.com"]
+        },
+        "format_preferences": ["pdf", "excel"]
+      }
+    },
+    "demo_talking_points": [
+      "End-to-end business process automation",
+      "Multi-source data integration and validation",
+      "Parallel processing for efficiency",
+      "Multiple output formats and distribution channels",
+      "Data quality assessment and error handling",
+      "Comprehensive audit trail and logging",
+      "Scalable to any reporting requirement"
+    ]
+  },
+  "validation_data": {
+    "resolve_workflow_equivalent": {
+      "description": "Represents comprehensive business process automation with data integration, report generation, and multi-channel distribution typical of enterprise reporting workflows",
+      "source_url": "https://docs.resolve.io/express/Builder/Workflow%20Designer/building-your-workflow/",
+      "complexity_justification": "Moderate-complex workflow with parallel data collection, conditional logic, multiple integrations, format conversions, and comprehensive distribution mechanisms"
+    }
+  }
+}
